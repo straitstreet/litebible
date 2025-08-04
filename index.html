@@ -6,9 +6,7 @@
     <title>litebible</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📖</text></svg>">
     <meta name="theme-color" content="#1a1a1a">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
+    <!-- NOTE: Using system fonts only - no external dependencies for fonts to avoid flicker -->
     <style>
         * {
             margin: 0;
@@ -17,7 +15,7 @@
         }
         
         body {
-            font-family: system-ui, -apple-system, 'Segoe UI Variable Text', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Iowan Old Style', 'Palatino Linotype', 'URW Palladio L', P052, serif;
             line-height: 1.7;
             color: #1a1a1a;
             background: #fefefe;
@@ -31,11 +29,10 @@
         }
         
         .sidebar {
-            width: 320px;
+            width: 280px;
             background: #fafafa;
-            border-right: 1px solid #e0e0e0;
+            border-right: 0.5px solid #d0d0d0;
             overflow-y: auto;
-            transition: transform 0.3s ease;
             position: fixed;
             top: 0;
             left: 0;
@@ -53,8 +50,7 @@
             margin: 0 auto;
             display: flex;
             flex-direction: column;
-            transition: margin-left 0.3s ease;
-            margin-left: 320px;
+            margin-left: 280px;
             min-height: 100vh;
         }
         
@@ -65,93 +61,54 @@
         
         .sidebar-toggle {
             position: fixed;
-            top: 20px;
-            left: 20px;
-            background: rgba(26, 26, 26, 0.8);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 6px;
-            padding: 8px 10px;
+            top: 16px;
+            left: 16px;
+            background: rgba(252, 252, 252, 0.92);
+            border: 0.5px solid rgba(220, 220, 220, 0.3);
+            border-radius: 3px;
+            padding: 6px;
             cursor: pointer;
-            z-index: 101;
-            font-size: 12px;
-            letter-spacing: 1px;
-            font-family: 'Cormorant Garamond', 'Garamond', serif;
-            font-weight: 400;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
+            z-index: 102;
+            backdrop-filter: blur(8px);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            width: 24px;
+            height: 24px;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
         
-        .sidebar-toggle.sidebar-open {
-            left: 340px;
+        .toggle-line {
+            width: 12px;
+            height: 0.5px;
+            background-color: #777;
+            transition: background-color 0.15s ease;
         }
         
         .sidebar-toggle:hover {
-            background: rgba(26, 26, 26, 0.9);
-            border-color: rgba(255, 255, 255, 0.3);
-            transform: translateY(-1px);
+            background: rgba(248, 248, 248, 0.96);
+            border-color: rgba(200, 200, 200, 0.5);
         }
         
-        header {
-            padding: 24px 30px 16px;
-            text-align: center;
-            border-bottom: 1px solid #f0f0f0;
+        .sidebar-toggle:hover .toggle-line {
+            background-color: #444;
         }
         
-        .logo {
-            font-size: 32px;
-            font-weight: 500;
-            letter-spacing: 0.5px;
-            color: #1a1a1a;
-            margin-bottom: 4px;
-            font-family: 'Cormorant Garamond', 'Garamond', serif;
+        .sidebar-toggle:focus {
+            outline: 2px solid #333;
+            outline-offset: 2px;
         }
         
-        .tagline {
-            font-size: 14px;
-            color: #666;
-            font-weight: 400;
-            letter-spacing: 0.3px;
-        }
-        
-        .navigation {
-            padding: 16px 30px 0;
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        
-        select {
-            background: transparent;
-            border: 1px solid #e0e0e0;
-            border-radius: 2px;
-            padding: 12px 16px;
-            font-size: 16px;
-            font-family: inherit;
-            color: #1a1a1a;
-            cursor: pointer;
-            transition: border-color 0.2s ease;
-            outline: none;
-        }
-        
-        select:hover {
-            border-color: #999;
-        }
-        
-        select:focus {
-            border-color: #1a1a1a;
-        }
-        
-        select:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
         
         .content {
             flex: 1;
-            padding: 12px 40px 24px;
+            padding: 20px 40px 24px;
+        }
+        
+        #chapter-content {
+            transition: opacity 0.15s ease;
         }
         
         .chapter-header {
@@ -168,13 +125,17 @@
             letter-spacing: 0.5px;
         }
         
+        .chapter-marker-text {
+            padding: 8px 0;
+        }
+        
         .book-name {
             font-size: 28px;
             font-weight: 400;
             color: #1a1a1a;
             margin-bottom: 8px;
             letter-spacing: 0.2px;
-            font-family: 'Cormorant Garamond', 'Garamond', serif;
+            font-family: 'Iowan Old Style', 'Palatino Linotype', 'URW Palladio L', P052, serif;
         }
         
         .chapter-number {
@@ -197,7 +158,7 @@
             text-align: justify;
             hyphens: auto;
             padding: 6px 0;
-            font-family: 'Charter', 'Georgia', 'Times New Roman', serif;
+            font-family: 'Bitstream Charter', 'Charter', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
         }
         
         .verse-number {
@@ -209,10 +170,9 @@
             display: inline-block;
             min-width: 16px;
             font-family: system-ui, sans-serif;
-            cursor: crosshair;
+            cursor: pointer;
             padding: 2px 4px;
             border-radius: 2px;
-            transition: all 0.15s ease;
             user-select: none;
         }
         
@@ -225,9 +185,13 @@
         }
         
         .verse-number:hover {
-            background-color: #f0f0f0;
             color: #333;
-            cursor: crosshair;
+            cursor: pointer;
+        }
+        
+        .verse-number:focus {
+            outline: 2px solid #333;
+            outline-offset: 2px;
         }
         
         .sidebar-content {
@@ -242,68 +206,111 @@
         }
         
         .picker-title {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 500;
             color: #1a1a1a;
-            padding: 20px 24px 16px;
-            border-bottom: 1px solid #e8e8e8;
-            font-family: 'Cormorant Garamond', 'Garamond', serif;
-            letter-spacing: 0.3px;
+            padding: 16px 20px 12px;
+            border-bottom: 0.5px solid #d8d8d8;
+            font-family: 'Iowan Old Style', 'Palatino Linotype', 'URW Palladio L', P052, serif;
+            letter-spacing: 0.2px;
         }
         
         .picker-header {
-            padding: 20px 24px;
-            border-bottom: 1px solid #e8e8e8;
+            padding: 12px 16px;
+            border-bottom: 0.5px solid #d8d8d8;
             display: flex;
             align-items: center;
             gap: 12px;
+            min-height: 44px;
         }
         
         .back-button {
             background: none;
             border: none;
-            color: #1976d2;
-            font-size: 14px;
+            color: #333;
+            font-size: 18px;
+            font-weight: 400;
             cursor: pointer;
-            padding: 4px 8px;
+            padding: 8px;
             border-radius: 4px;
-            transition: background-color 0.2s ease;
+            min-width: 32px;
+            min-height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .back-button:hover {
-            background-color: #f0f7ff;
+            background-color: #f0f0f0;
+            cursor: pointer;
+        }
+        
+        .back-button:focus {
+            outline: 2px solid #333;
+            outline-offset: 2px;
+        }
+        
+        .current-book-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+            font-family: 'Iowan Old Style', 'Palatino Linotype', 'URW Palladio L', P052, serif;
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         
         .book-grid {
             flex: 1;
-            padding: 16px;
+            padding: 8px;
             display: grid;
             grid-template-columns: 1fr;
-            gap: 2px;
+            gap: 1px;
             align-content: start;
         }
         
         .book-item {
             padding: 12px 16px;
             cursor: pointer;
-            transition: all 0.2s ease;
-            border-radius: 4px;
+            border-radius: 3px;
             font-size: 14px;
             color: #1a1a1a;
-            border: 1px solid transparent;
+            border: none;
+            border-bottom: 0.5px solid transparent;
+            background: none;
+            font-family: inherit;
+            text-align: left;
+            width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
         }
         
         .book-item:hover {
-            background-color: #f8f9fa;
-            border-color: #e0e0e0;
+            background-color: #f5f7fa;
+            cursor: pointer;
+        }
+        
+        .book-item:focus {
+            outline: 2px solid #333;
+            outline-offset: 1px;
+            background-color: #f5f5f5;
+        }
+        
+        .book-item:not(:last-child) {
+            border-bottom-color: #efefef;
         }
         
         .chapter-grid {
             flex: 1;
-            padding: 16px;
+            padding: 12px;
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-            gap: 8px;
+            grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+            gap: 6px;
             align-content: start;
         }
         
@@ -313,44 +320,50 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s ease;
-            border-radius: 6px;
-            font-size: 14px;
+            border-radius: 4px;
+            font-size: 13px;
             font-weight: 500;
-            color: #1a1a1a;
-            background-color: #f8f9fa;
-            border: 1px solid #e0e0e0;
+            color: #2a2a2a;
+            background-color: #f9f9f9;
+            border: 0.5px solid #e8e8e8;
+            font-family: inherit;
         }
         
         .chapter-item:hover {
-            background-color: #e3f2fd;
-            border-color: #1976d2;
-            color: #1976d2;
+            background-color: #f0f0f0;
+            border-color: #c0c0c0;
+            color: #2a2a2a;
+            cursor: pointer;
+        }
+        
+        .chapter-item:focus {
+            outline: 2px solid #333;
+            outline-offset: 2px;
         }
         
         .chapter-item.active {
-            background-color: #1976d2;
-            border-color: #1976d2;
+            background-color: #333;
+            border-color: #2a2a2a;
             color: white;
+        }
+        
+        .chapter-item.active:focus {
+            outline-color: #fff;
         }
         
         /* Large desktop screens (1200px+) */
         @media (min-width: 1200px) {
             .sidebar {
-                width: 360px;
+                width: 320px;
             }
             
             .main-content {
-                margin-left: 360px;
+                margin-left: 320px;
                 max-width: 900px;
             }
             
             .main-content.sidebar-closed {
                 max-width: 1000px;
-            }
-            
-            .sidebar-toggle.sidebar-open {
-                left: 380px;
             }
             
             .content {
@@ -372,16 +385,12 @@
         /* Medium screens (tablets) */
         @media (max-width: 1024px) and (min-width: 769px) {
             .sidebar {
-                width: 300px;
+                width: 280px;
             }
             
             .main-content {
-                margin-left: 300px;
+                margin-left: 280px;
                 max-width: 720px;
-            }
-            
-            .sidebar-toggle.sidebar-open {
-                left: 320px;
             }
             
             .content {
@@ -520,21 +529,24 @@
     </style>
 </head>
 <body>
-    <button class="sidebar-toggle" onclick="toggleSidebar()">⋮⋮⋮</button>
+    <button class="sidebar-toggle" onclick="toggleSidebar()">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </button>
     
     <div class="app">
-        <div class="sidebar" id="sidebar">
+        <div class="sidebar closed" id="sidebar">
             <div class="sidebar-content">
                 <div class="picker-section" id="book-picker">
-                    <div class="picker-title">Choose Book</div>
                     <div class="book-grid" id="book-grid">
                         <!-- Books will be populated here -->
                     </div>
                 </div>
                 <div class="picker-section" id="chapter-picker" style="display: none;">
                     <div class="picker-header">
-                        <button class="back-button" onclick="showBookPicker()">← Books</button>
-                        <div class="picker-title" id="selected-book-title"></div>
+                        <button class="back-button" onclick="showBookPicker()" aria-label="Back to book list">←</button>
+                        <div class="current-book-title" id="selected-book-title"></div>
                     </div>
                     <div class="chapter-grid" id="chapter-grid">
                         <!-- Chapters will be populated here -->
@@ -543,17 +555,10 @@
             </div>
         </div>
         
-        <div class="main-content" id="main-content">
-            <header>
-                <div class="logo">litebible</div>
-                <div class="tagline">Berean Study Bible • <a href="https://buy.stripe.com/bJecN42JYb6bcjgdURdnW03" target="_blank" style="color: #999; text-decoration: none; font-size: 12px;">support</a></div>
-            </header>
-        
-        
-        
+        <div class="main-content sidebar-closed" id="main-content">
         <main class="content">
             <div id="chapter-content" class="loading">
-                Choose a book and chapter to begin reading
+                Loading...
             </div>
         </main>
         </div>
@@ -567,11 +572,14 @@
         let currentBook = null;
         let currentChapter = null;
         let selectedVerse = null;
-        let loadedChapters = new Set();
+        let loadedChapters = new Map(); // Changed to Map to track order and content
         let progressiveLoading = false;
+        let isInitialLoad = true;
+        let maxLoadedChapters = 5; // Maximum chapters to keep in memory
 
         // Load ultra-compact BSB data
         async function loadBibleData() {
+            return new Promise(async (resolve, reject) => {
             try {
                 const response = await fetch('BSB.ultra.json');
                 const compactData = await response.json();
@@ -587,18 +595,34 @@
                 
                 populateBooks();
                 
-                // Load from URL or default to John 1
+                // Check for saved position first, then URL, then default
                 const urlParams = parseURL();
+                const savedPosition = getSavedPosition();
+                
                 if (urlParams.book && bibleData[urlParams.book]) {
+                    // URL takes precedence
                     loadBookFromURL(urlParams);
-                } else {
-                    loadDefault();
+                    isInitialLoad = false;
+                } else if (savedPosition && bibleData[savedPosition.book]) {
+                    // Load saved position
+                    loadChapterAndVerse(savedPosition.book, savedPosition.chapter, savedPosition.verse);
+                    showChapterPicker(savedPosition.book);
+                    isInitialLoad = false;
+                } else if (isInitialLoad) {
+                    // Default to John 1:1 on first visit only
+                    loadChapterAndVerse('John', 1, 1);
+                    showChapterPicker('John');
+                    isInitialLoad = false;
                 }
+                
+                resolve();
             } catch (error) {
                 document.getElementById('chapter-content').innerHTML = 
                     '<div class="loading">Error loading Bible data. Please refresh the page.</div>';
                 console.error('Error loading Bible data:', error);
+                reject(error);
             }
+            });
         }
 
         function populateBooks() {
@@ -608,9 +632,12 @@
             bookGrid.innerHTML = '';
             
             Object.keys(bibleData).forEach(book => {
-                const bookItem = document.createElement('div');
+                const bookItem = document.createElement('button');
                 bookItem.className = 'book-item';
                 bookItem.textContent = book;
+                bookItem.setAttribute('type', 'button');
+                bookItem.setAttribute('role', 'button');
+                bookItem.setAttribute('aria-label', `Select ${book}`);
                 bookItem.onclick = () => showChapterPicker(book);
                 bookGrid.appendChild(bookItem);
             });
@@ -625,11 +652,17 @@
             
             const chapters = Object.keys(bibleData[book]);
             chapters.forEach(chapterNum => {
-                const chapterItem = document.createElement('div');
+                const chapterItem = document.createElement('button');
                 chapterItem.className = 'chapter-item';
                 chapterItem.textContent = chapterNum;
+                chapterItem.setAttribute('type', 'button');
+                chapterItem.setAttribute('role', 'button');
+                chapterItem.setAttribute('aria-label', `Chapter ${chapterNum}`);
                 if (parseInt(chapterNum) === currentChapter) {
                     chapterItem.classList.add('active');
+                    chapterItem.setAttribute('aria-pressed', 'true');
+                } else {
+                    chapterItem.setAttribute('aria-pressed', 'false');
                 }
                 chapterItem.onclick = () => loadChapterAndVerse(book, parseInt(chapterNum), 1);
                 chapterGrid.appendChild(chapterItem);
@@ -645,41 +678,156 @@
         }
 
 
-        function loadChapter() {
+        function loadChapter(replaceAll = true) {
             if (!currentBook || !currentChapter || !bibleData) return;
-            
-            selectedVerse = null;
-            loadedChapters.clear();
             
             const verses = bibleData[currentBook][currentChapter];
             if (!verses) return;
             
-            const contentDiv = document.getElementById('chapter-content');
-            
-            let html = `
-                <div class="chapter-header">
-                    <div class="book-name">${currentBook}</div>
-                    <div class="chapter-number">Chapter ${currentChapter}</div>
-                </div>
-                <div class="verses" id="verses-container">
-            `;
-            
-            verses.forEach((verse, index) => {
-                const verseNum = index + 1;
-                html += `<div class="verse" id="${currentBook.replace(/\s+/g, '')}-${currentChapter}-${verseNum}">
-                    <span class="verse-number" onclick="selectVerse(${verseNum}, ${currentChapter})">${verseNum}</span>${verse}
-                </div>`;
-            });
-            
-            html += '</div>';
-            contentDiv.innerHTML = html;
-            
-            loadedChapters.add(currentChapter);
+            if (replaceAll) {
+                // Replace all content (initial load)
+                selectedVerse = null;
+                loadedChapters.clear();
+                
+                const contentDiv = document.getElementById('chapter-content');
+                
+                let html = `
+                    <div class="chapter-header">
+                        <div class="book-name">${currentBook}</div>
+                        <div class="chapter-number">Chapter ${currentChapter}</div>
+                    </div>
+                    <div class="verses" id="verses-container">
+                `;
+                
+                html += generateChapterHTML(currentBook, currentChapter, verses);
+                html += '</div>';
+                contentDiv.innerHTML = html;
+                
+                loadedChapters.set(currentChapter, { book: currentBook, chapter: currentChapter, timestamp: Date.now() });
+            } else {
+                // Add to existing content (buffered loading)
+                addChapterToContent(currentBook, currentChapter, verses);
+            }
             
             updateURL();
             setupProgressiveLoading();
+            updateChapterPicker();
             
-            // Handle both URL params and direct verse anchors
+            // Handle URL params and verse anchors
+            handleVerseAnchors();
+        }
+        
+        function generateChapterHTML(book, chapter, verses) {
+            let html = `<div class="chapter-marker" data-chapter="${chapter}">
+                <div class="chapter-marker-text">Chapter ${chapter}</div>
+            </div>`;
+            
+            verses.forEach((verse, index) => {
+                const verseNum = index + 1;
+                html += `<div class="verse" id="${book.replace(/\s+/g, '')}-${chapter}-${verseNum}">
+                    <span class="verse-number" onclick="selectVerse(${verseNum}, ${chapter})">${verseNum}</span>${verse}
+                </div>`;
+            });
+            
+            return html;
+        }
+        
+        function addChapterToContent(book, chapter, verses, position = 'bottom') {
+            if (loadedChapters.has(chapter)) return; // Already loaded
+            
+            const container = document.getElementById('verses-container');
+            if (!container) return;
+            
+            const chapterHTML = generateChapterHTML(book, chapter, verses);
+            
+            if (position === 'top') {
+                // Prepend to top
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = chapterHTML;
+                
+                // Store current scroll position
+                const currentScrollY = window.scrollY;
+                const currentScrollHeight = document.documentElement.scrollHeight;
+                
+                // Add content to top
+                while (tempDiv.firstChild) {
+                    container.insertBefore(tempDiv.firstChild, container.firstChild);
+                }
+                
+                // Maintain scroll position relative to original content
+                const newScrollHeight = document.documentElement.scrollHeight;
+                const heightDifference = newScrollHeight - currentScrollHeight;
+                window.scrollTo(0, currentScrollY + heightDifference);
+                
+            } else {
+                // Append to bottom
+                container.insertAdjacentHTML('beforeend', chapterHTML);
+            }
+            
+            loadedChapters.set(chapter, { book, chapter, timestamp: Date.now() });
+            
+            // Clean up old chapters if we have too many
+            manageChapterMemory();
+        }
+        
+        function manageChapterMemory() {
+            if (loadedChapters.size <= maxLoadedChapters) return;
+            
+            // Sort chapters by distance from current chapter
+            const chapterEntries = Array.from(loadedChapters.entries());
+            chapterEntries.sort(([chapterA], [chapterB]) => {
+                const distanceA = Math.abs(chapterA - currentChapter);
+                const distanceB = Math.abs(chapterB - currentChapter);
+                return distanceB - distanceA; // Sort by distance, farthest first
+            });
+            
+            // Remove the farthest chapters
+            const chaptersToRemove = chapterEntries.slice(maxLoadedChapters);
+            
+            chaptersToRemove.forEach(([chapter]) => {
+                removeChapterFromDOM(chapter);
+                loadedChapters.delete(chapter);
+            });
+        }
+        
+        function removeChapterFromDOM(chapter) {
+            const chapterMarker = document.querySelector(`[data-chapter="${chapter}"]`);
+            if (chapterMarker) {
+                // Remove all content until the next chapter marker or end
+                let element = chapterMarker;
+                const elementsToRemove = [element];
+                
+                while (element.nextElementSibling && !element.nextElementSibling.classList.contains('chapter-marker')) {
+                    element = element.nextElementSibling;
+                    elementsToRemove.push(element);
+                }
+                
+                elementsToRemove.forEach(el => el.remove());
+            }
+        }
+        
+        function updateChapterPicker() {
+            setTimeout(() => {
+                // Update book selector if it exists
+                const bookSelect = document.getElementById('book-select');
+                if (bookSelect && currentBook) {
+                    bookSelect.value = currentBook;
+                }
+                
+                // Update chapter picker active state
+                const chapterItems = document.querySelectorAll('.chapter-item');
+                chapterItems.forEach(item => {
+                    item.classList.remove('active');
+                    item.setAttribute('aria-pressed', 'false');
+                    if (parseInt(item.textContent) === currentChapter) {
+                        item.classList.add('active');
+                        item.setAttribute('aria-pressed', 'true');
+                    }
+                });
+            }, 50);
+        }
+        
+        function handleVerseAnchors() {
             const urlParams = parseURL();
             const hash = window.location.hash.substring(1);
             
@@ -697,6 +845,11 @@
         function selectVerse(verseNumber, chapterNum = currentChapter) {
             selectedVerse = verseNumber;
             currentChapter = chapterNum;
+            
+            // Save position to localStorage
+            savePosition(currentBook, currentChapter, selectedVerse);
+            
+            // Update URL only if not changing due to navigation
             updateURL();
             
             // Update the browser's location hash to make it anchorable
@@ -715,18 +868,20 @@
             
             // Navigate to next/previous chapter if needed
             if (targetVerse > verses.length) {
-                const nextChapter = currentChapter + 1;
-                if (bibleData[currentBook][nextChapter]) {
-                    currentChapter = nextChapter;
-                    loadChapter();
-                    setTimeout(() => selectVerse(1), 100);
+                const next = getNextBookAndChapter(currentBook, currentChapter);
+                if (next) {
+                    loadChapterAndVerse(next.book, next.chapter, 1);
+                    if (next.book !== currentBook) {
+                        showChapterPicker(next.book);
+                    }
                 }
             } else if (targetVerse < 1) {
-                const prevChapter = currentChapter - 1;
-                if (bibleData[currentBook][prevChapter]) {
-                    currentChapter = prevChapter;
-                    loadChapter();
-                    setTimeout(() => selectVerse(bibleData[currentBook][prevChapter].length), 100);
+                const prev = getPrevBookAndChapter(currentBook, currentChapter);
+                if (prev) {
+                    loadChapterAndVerse(prev.book, prev.chapter, bibleData[prev.book][prev.chapter].length);
+                    if (prev.book !== currentBook) {
+                        showChapterPicker(prev.book);
+                    }
                 }
             } else {
                 selectVerse(targetVerse);
@@ -753,12 +908,19 @@
         function updateURL() {
             if (!currentBook || !currentChapter) return;
             
-            let hash = `book=${encodeURIComponent(currentBook)}&chapter=${currentChapter}`;
+            // Only update URL hash if we have a selected verse, otherwise keep it minimal
             if (selectedVerse) {
-                hash += `&verse=${selectedVerse}`;
+                const verseId = `${currentBook.replace(/\s+/g, '')}-${currentChapter}-${selectedVerse}`;
+                // Don't trigger hashchange event by checking if it's already set
+                if (window.location.hash !== `#${verseId}`) {
+                    window.location.hash = verseId;
+                }
+            } else {
+                let hash = `book=${encodeURIComponent(currentBook)}&chapter=${currentChapter}`;
+                if (window.location.hash !== `#${hash}`) {
+                    window.location.hash = hash;
+                }
             }
-            
-            window.location.hash = hash;
         }
         
         function loadBookFromURL(params) {
@@ -771,13 +933,8 @@
         }
         
         function loadDefault() {
-            // Default to John 1
-            if (bibleData['John']) {
-                currentBook = 'John';
-                currentChapter = 1;
-                loadChapter();
-                showChapterPicker('John');
-            }
+            // No default loading - let user choose
+            document.getElementById('chapter-content').innerHTML = '<div class="loading">Choose a book and chapter to begin reading</div>';
         }
         
         // Handle browser back/forward
@@ -794,7 +951,7 @@
         
         let touchStartX = 0;
         let touchStartY = 0;
-        let sidebarOpen = true;
+        let sidebarOpen = false;
         
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
@@ -858,11 +1015,22 @@
         function navigateChapter(direction) {
             if (!currentBook || !currentChapter) return;
             
-            const targetChapter = currentChapter + direction;
-            if (bibleData[currentBook][targetChapter]) {
-                currentChapter = targetChapter;
-                loadChapter();
-                setTimeout(() => selectVerse(direction > 0 ? 1 : bibleData[currentBook][targetChapter].length), 100);
+            if (direction > 0) {
+                const next = getNextBookAndChapter(currentBook, currentChapter);
+                if (next) {
+                    loadChapterAndVerse(next.book, next.chapter, 1);
+                    if (next.book !== currentBook) {
+                        showChapterPicker(next.book);
+                    }
+                }
+            } else {
+                const prev = getPrevBookAndChapter(currentBook, currentChapter);
+                if (prev) {
+                    loadChapterAndVerse(prev.book, prev.chapter, bibleData[prev.book][prev.chapter].length);
+                    if (prev.book !== currentBook) {
+                        showChapterPicker(prev.book);
+                    }
+                }
             }
         }
         
@@ -952,11 +1120,11 @@
             if (sidebarOpen) {
                 sidebar.classList.remove('closed');
                 mainContent.classList.remove('sidebar-closed');
-                toggle.classList.add('sidebar-open');
+                // Keep toggle in same position when sidebar is open
             } else {
                 sidebar.classList.add('closed');
                 mainContent.classList.add('sidebar-closed');
-                toggle.classList.remove('sidebar-open');
+                // Keep toggle in same position when sidebar is closed
             }
         }
         
@@ -965,6 +1133,15 @@
         function loadChapterAndVerse(book, chapter, verse = null) {
             currentBook = book;
             currentChapter = chapter;
+            
+            // Save position when loading new content
+            if (verse) {
+                selectedVerse = verse;
+                savePosition(book, chapter, verse);
+            } else {
+                savePosition(book, chapter, 1);
+            }
+            
             loadChapter();
             
             // Update the chapter picker to show the selected chapter
@@ -983,9 +1160,165 @@
             }
         }
         
+        // Scroll-based navigation
+        let isScrollNavigating = false;
+        
+        function getNextBookAndChapter(book, chapter) {
+            const books = Object.keys(bibleData);
+            const currentBookIndex = books.indexOf(book);
+            
+            // Try next chapter in current book first
+            if (bibleData[book][chapter + 1]) {
+                return { book: book, chapter: chapter + 1 };
+            }
+            
+            // Move to next book, chapter 1
+            if (currentBookIndex < books.length - 1) {
+                const nextBook = books[currentBookIndex + 1];
+                return { book: nextBook, chapter: 1 };
+            }
+            
+            return null; // End of Bible
+        }
+        
+        function getPrevBookAndChapter(book, chapter) {
+            const books = Object.keys(bibleData);
+            const currentBookIndex = books.indexOf(book);
+            
+            // Try previous chapter in current book first
+            if (bibleData[book][chapter - 1]) {
+                return { book: book, chapter: chapter - 1 };
+            }
+            
+            // Move to previous book, last chapter
+            if (currentBookIndex > 0) {
+                const prevBook = books[currentBookIndex - 1];
+                const chapters = Object.keys(bibleData[prevBook]).map(Number);
+                const lastChapter = Math.max(...chapters);
+                return { book: prevBook, chapter: lastChapter };
+            }
+            
+            return null; // Beginning of Bible
+        }
+        
+        function setupScrollNavigation() {
+            let scrollTimeout;
+            
+            window.addEventListener('scroll', () => {
+                if (isScrollNavigating || !currentBook || !currentChapter) return;
+                
+                clearTimeout(scrollTimeout);
+                scrollTimeout = setTimeout(() => {
+                    const scrollTop = window.scrollY;
+                    const scrollHeight = document.documentElement.scrollHeight;
+                    const clientHeight = window.innerHeight;
+                    
+                    // Load next section when scrolled to bottom
+                    if (scrollTop + clientHeight >= scrollHeight - 50) {
+                        const next = getNextBookAndChapter(currentBook, currentChapter);
+                        if (next) {
+                            isScrollNavigating = true;
+                            
+                            // If switching books, clear loaded chapters and start fresh
+                            if (next.book !== currentBook) {
+                                showChapterPicker(next.book);
+                                currentBook = next.book;
+                                currentChapter = next.chapter;
+                                loadChapter(true); // Replace all content
+                            } else {
+                                // Same book, add next chapter to existing content
+                                currentChapter = next.chapter;
+                                const verses = bibleData[currentBook][currentChapter];
+                                if (verses) {
+                                    addChapterToContent(currentBook, currentChapter, verses, 'bottom');
+                                    updateChapterPicker();
+                                }
+                            }
+                            
+                            setTimeout(() => { isScrollNavigating = false; }, 100);
+                        }
+                    }
+                    
+                    // Load previous section when scrolled to top
+                    else if (scrollTop <= 50) {
+                        const prev = getPrevBookAndChapter(currentBook, currentChapter);
+                        if (prev) {
+                            isScrollNavigating = true;
+                            
+                            // If switching books, clear loaded chapters and start fresh
+                            if (prev.book !== currentBook) {
+                                showChapterPicker(prev.book);
+                                currentBook = prev.book;
+                                currentChapter = prev.chapter;
+                                loadChapter(true); // Replace all content
+                                
+                                // Scroll to bottom after loading
+                                setTimeout(() => {
+                                    const scrollHeight = document.documentElement.scrollHeight;
+                                    const clientHeight = window.innerHeight;
+                                    window.scrollTo(0, scrollHeight - clientHeight - 100);
+                                    isScrollNavigating = false;
+                                }, 200);
+                            } else {
+                                // Same book, add previous chapter to existing content
+                                currentChapter = prev.chapter;
+                                const verses = bibleData[currentBook][currentChapter];
+                                if (verses) {
+                                    addChapterToContent(currentBook, currentChapter, verses, 'top');
+                                    updateChapterPicker();
+                                }
+                                isScrollNavigating = false;
+                            }
+                        }
+                    }
+                }, 150);
+            });
+        }
+        
+        // localStorage functions for saving/loading position
+        function savePosition(book, chapter, verse) {
+            const position = { book, chapter, verse, timestamp: Date.now() };
+            try {
+                localStorage.setItem('litebible-position', JSON.stringify(position));
+            } catch (e) {
+                // Handle localStorage errors silently
+            }
+        }
+        
+        function getSavedPosition() {
+            try {
+                const saved = localStorage.getItem('litebible-position');
+                if (saved) {
+                    const position = JSON.parse(saved);
+                    // Only use saved position if it's less than 30 days old
+                    if (Date.now() - position.timestamp < 30 * 24 * 60 * 60 * 1000) {
+                        return position;
+                    }
+                }
+            } catch (e) {
+                // Handle localStorage errors silently
+            }
+            return null;
+        }
+        
         // Initialize the app
         document.addEventListener('DOMContentLoaded', () => {
-            loadBibleData();
+            // Hide content initially to prevent flicker
+            const content = document.getElementById('chapter-content');
+            content.style.opacity = '0';
+            
+            loadBibleData().then(() => {
+                // Show content once fully loaded
+                setTimeout(() => {
+                    content.style.opacity = '1';
+                }, 100);
+            }).catch(() => {
+                // Show error message if loading fails
+                content.innerHTML = '<div class="loading">Error loading Bible data. Please refresh the page.</div>';
+                content.style.opacity = '1';
+            });
+            
+            setupScrollNavigation();
         });
     </script>
 </body>

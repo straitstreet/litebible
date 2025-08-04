@@ -1,6 +1,6 @@
-# Bible Reader
+# litebible
 
-A lightweight, minimal Bible reading web application built with native HTML, CSS, and JavaScript.
+A lightweight, minimal Bible reading application built with native HTML, CSS, and JavaScript for web, Android, and iOS.
 
 ## Features
 

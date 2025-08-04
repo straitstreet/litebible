@@ -573,9 +573,10 @@
         let currentChapter = null;
         let selectedVerse = null;
         let loadedChapters = new Map(); // Changed to Map to track order and content
+        let preloadedChapters = new Map(); // Cache for preloaded chapters
         let progressiveLoading = false;
         let isInitialLoad = true;
-        let maxLoadedChapters = 5; // Maximum chapters to keep in memory
+        let maxLoadedChapters = 7; // Maximum chapters to keep in memory (increased for preloading)
 
         // Load ultra-compact BSB data
         async function loadBibleData() {
@@ -644,6 +645,12 @@
         }
 
         function showChapterPicker(book) {
+            // Validate book exists
+            if (!bibleData || !bibleData[book]) {
+                console.error(`Invalid book: ${book}`);
+                return;
+            }
+            
             currentBook = book;
             document.getElementById('selected-book-title').textContent = book;
             
@@ -686,7 +693,7 @@
             
             if (replaceAll) {
                 // Replace all content (initial load)
-                selectedVerse = null;
+                selectedVerse = 1;
                 loadedChapters.clear();
                 
                 const contentDiv = document.getElementById('chapter-content');
@@ -713,6 +720,11 @@
             setupProgressiveLoading();
             updateChapterPicker();
             
+            // Preload surrounding chapters for smooth navigation
+            if (replaceAll) {
+                preloadSurroundingChapters();
+            }
+            
             // Handle URL params and verse anchors
             handleVerseAnchors();
         }
@@ -738,7 +750,14 @@
             const container = document.getElementById('verses-container');
             if (!container) return;
             
-            const chapterHTML = generateChapterHTML(book, chapter, verses);
+            // Check if we have preloaded this chapter
+            const preloaded = getPreloadedChapter(chapter);
+            const chapterHTML = preloaded ? preloaded.html : generateChapterHTML(book, chapter, verses);
+            
+            // Remove from preloaded cache since we're now using it
+            if (preloaded) {
+                preloadedChapters.delete(chapter);
+            }
             
             if (position === 'top') {
                 // Prepend to top
@@ -765,6 +784,9 @@
             }
             
             loadedChapters.set(chapter, { book, chapter, timestamp: Date.now() });
+            
+            // Preload more chapters around the new position
+            setTimeout(() => preloadSurroundingChapters(), 100);
             
             // Clean up old chapters if we have too many
             manageChapterMemory();
@@ -849,12 +871,8 @@
             // Save position to localStorage
             savePosition(currentBook, currentChapter, selectedVerse);
             
-            // Update URL only if not changing due to navigation
+            // Update URL (this will handle the hash properly)
             updateURL();
-            
-            // Update the browser's location hash to make it anchorable
-            const verseId = `${currentBook.replace(/\s+/g, '')}-${chapterNum}-${verseNumber}`;
-            window.location.hash = verseId;
         }
         
         function navigateVerse(direction) {
@@ -905,22 +923,22 @@
             return params;
         }
         
+        let updateURLTimeout;
         function updateURL() {
             if (!currentBook || !currentChapter) return;
             
-            // Only update URL hash if we have a selected verse, otherwise keep it minimal
-            if (selectedVerse) {
-                const verseId = `${currentBook.replace(/\s+/g, '')}-${currentChapter}-${selectedVerse}`;
+            // Debounce URL updates to prevent flashing
+            clearTimeout(updateURLTimeout);
+            updateURLTimeout = setTimeout(() => {
+                // Always include verse - default to verse 1 if no verse selected
+                const verse = selectedVerse || 1;
+                const verseId = `${currentBook.replace(/\s+/g, '')}-${currentChapter}-${verse}`;
+                
                 // Don't trigger hashchange event by checking if it's already set
                 if (window.location.hash !== `#${verseId}`) {
                     window.location.hash = verseId;
                 }
-            } else {
-                let hash = `book=${encodeURIComponent(currentBook)}&chapter=${currentChapter}`;
-                if (window.location.hash !== `#${hash}`) {
-                    window.location.hash = hash;
-                }
-            }
+            }, 100);
         }
         
         function loadBookFromURL(params) {
@@ -1041,34 +1059,12 @@
         
         
         function setupProgressiveLoading() {
-            const container = document.getElementById('verses-container');
-            if (!container) return;
-            
-            // Remove existing listeners
-            container.removeEventListener('scroll', checkProgressiveLoad);
-            window.removeEventListener('scroll', checkProgressiveLoad);
-            
-            // Add scroll listener
-            window.addEventListener('scroll', checkProgressiveLoad);
+            // Progressive loading is now handled by the main scroll navigation system
+            // This function is kept for compatibility but does nothing
         }
         
         function checkProgressiveLoad() {
-            if (progressiveLoading || !currentBook || !currentChapter) return;
-            
-            const container = document.getElementById('verses-container');
-            if (!container) return;
-            
-            const scrollPosition = window.scrollY + window.innerHeight;
-            const containerBottom = container.offsetTop + container.offsetHeight;
-            const documentHeight = document.documentElement.scrollHeight;
-            
-            // Load next chapter when near the end of current content or at document bottom
-            if (scrollPosition > containerBottom * 0.8 || scrollPosition >= documentHeight - 100) {
-                const nextChapter = currentChapter + 1;
-                if (bibleData[currentBook][nextChapter] && !loadedChapters.has(nextChapter)) {
-                    appendNextChapter(nextChapter);
-                }
-            }
+            // This function is no longer used - scroll handling consolidated
         }
         
         function appendNextChapter(chapterNum) {
@@ -1087,25 +1083,11 @@
                 return;
             }
             
+            // Use consistent HTML generation
+            const chapterHTML = generateChapterHTML(currentBook, chapterNum, verses);
+            container.insertAdjacentHTML('beforeend', chapterHTML);
             
-            // Add chapter marker
-            const chapterMarker = document.createElement('div');
-            chapterMarker.style.cssText = 'margin: 32px 0 24px; text-align: center; color: #666; font-size: 16px; font-weight: 500; letter-spacing: 0.5px;';
-            chapterMarker.textContent = `Chapter ${chapterNum}`;
-            container.appendChild(chapterMarker);
-            
-            // Add verses
-            verses.forEach((verse, index) => {
-                const verseNum = index + 1;
-                const verseDiv = document.createElement('div');
-                verseDiv.className = 'verse';
-                const bookName = currentBook.replace(/\s+/g, '');
-                verseDiv.id = `${bookName}-${chapterNum}-${verseNum}`;
-                verseDiv.innerHTML = `<span class="verse-number" onclick="selectVerse(${verseNum}, ${chapterNum})">${verseNum}</span>${verse}`;
-                container.appendChild(verseDiv);
-            });
-            
-            loadedChapters.add(chapterNum);
+            loadedChapters.set(chapterNum, { book: currentBook, chapter: chapterNum, timestamp: Date.now() });
             progressiveLoading = false;
         }
         
@@ -1131,6 +1113,14 @@
         
         
         function loadChapterAndVerse(book, chapter, verse = null) {
+            // Validate that the requested book/chapter exists
+            if (!bibleData || !bibleData[book] || !bibleData[book][chapter]) {
+                console.error(`Invalid book/chapter: ${book} ${chapter}`);
+                document.getElementById('chapter-content').innerHTML = 
+                    '<div class="loading">Chapter not found. Please try a different selection.</div>';
+                return;
+            }
+            
             currentBook = book;
             currentChapter = chapter;
             
@@ -1299,6 +1289,62 @@
                 // Handle localStorage errors silently
             }
             return null;
+        }
+        
+        // Preload surrounding chapters for smooth navigation
+        function preloadSurroundingChapters() {
+            if (!currentBook || !currentChapter || !bibleData) return;
+            
+            // Preload 2 chapters before and 2 chapters after current chapter
+            const chaptersToPreload = [];
+            
+            for (let i = -2; i <= 2; i++) {
+                if (i === 0) continue; // Skip current chapter (already loaded)
+                
+                const chapterNum = currentChapter + i;
+                if (bibleData[currentBook][chapterNum] && 
+                    !loadedChapters.has(chapterNum) && 
+                    !preloadedChapters.has(chapterNum)) {
+                    chaptersToPreload.push(chapterNum);
+                }
+            }
+            
+            // Preload chapters in background
+            chaptersToPreload.forEach((chapterNum, index) => {
+                setTimeout(() => {
+                    preloadChapter(currentBook, chapterNum);
+                }, index * 50); // Stagger the preloading to avoid blocking
+            });
+        }
+        
+        function preloadChapter(book, chapter) {
+            if (!bibleData[book] || !bibleData[book][chapter]) return;
+            
+            const verses = bibleData[book][chapter];
+            const chapterData = {
+                book,
+                chapter,
+                verses,
+                html: generateChapterHTML(book, chapter, verses),
+                timestamp: Date.now()
+            };
+            
+            preloadedChapters.set(chapter, chapterData);
+            
+            // Clean up old preloaded chapters if we have too many
+            if (preloadedChapters.size > 8) {
+                const oldestEntries = Array.from(preloadedChapters.entries())
+                    .sort(([,a], [,b]) => a.timestamp - b.timestamp)
+                    .slice(0, preloadedChapters.size - 8);
+                    
+                oldestEntries.forEach(([chapterNum]) => {
+                    preloadedChapters.delete(chapterNum);
+                });
+            }
+        }
+        
+        function getPreloadedChapter(chapter) {
+            return preloadedChapters.get(chapter);
         }
         
         // Initialize the app

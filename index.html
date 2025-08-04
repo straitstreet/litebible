@@ -44,6 +44,11 @@
             transform: translateX(-100%);
         }
         
+        .sidebar.closed .sidebar-toggle {
+            transform: translateX(calc(100% + 280px));
+            right: -40px;
+        }
+        
         .main-content {
             flex: 1;
             max-width: 800px;
@@ -60,13 +65,13 @@
         }
         
         .sidebar-toggle {
-            position: fixed;
+            position: absolute;
             top: 16px;
-            left: 16px;
-            background: rgba(252, 252, 252, 0.92);
-            border: 0.5px solid rgba(220, 220, 220, 0.3);
-            border-radius: 3px;
-            padding: 6px;
+            right: -12px;
+            background: rgba(252, 252, 252, 0.95);
+            border: 0.5px solid rgba(220, 220, 220, 0.4);
+            border-radius: 6px;
+            padding: 8px;
             cursor: pointer;
             z-index: 102;
             backdrop-filter: blur(8px);
@@ -77,7 +82,8 @@
             height: 24px;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
         }
         
         .toggle-line {
@@ -88,8 +94,9 @@
         }
         
         .sidebar-toggle:hover {
-            background: rgba(248, 248, 248, 0.96);
-            border-color: rgba(200, 200, 200, 0.5);
+            background: rgba(248, 248, 248, 0.98);
+            border-color: rgba(200, 200, 200, 0.6);
+            transform: scale(1.05);
         }
         
         .sidebar-toggle:hover .toggle-line {
@@ -357,6 +364,7 @@
                 width: 320px;
             }
             
+            
             .main-content {
                 margin-left: 320px;
                 max-width: 900px;
@@ -365,6 +373,11 @@
             .main-content.sidebar-closed {
                 max-width: 1000px;
             }
+            
+            .sidebar.closed .sidebar-toggle {
+                transform: translateX(calc(100% + 320px));
+            }
+            
             
             .content {
                 padding: 16px 60px 32px;
@@ -409,13 +422,14 @@
                 width: 100%;
             }
             
+            .sidebar-toggle {
+                right: 16px;
+                top: 20px;
+            }
+            
             .main-content {
                 margin-left: 0;
                 max-width: 100%;
-            }
-            
-            .sidebar-toggle.sidebar-open {
-                left: 20px;
             }
             
             header {
@@ -529,14 +543,13 @@
     </style>
 </head>
 <body>
-    <button class="sidebar-toggle" onclick="toggleSidebar()">
-        <span class="toggle-line"></span>
-        <span class="toggle-line"></span>
-        <span class="toggle-line"></span>
-    </button>
-    
     <div class="app">
-        <div class="sidebar closed" id="sidebar">
+        <div class="sidebar" id="sidebar">
+            <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+                <span class="toggle-line"></span>
+                <span class="toggle-line"></span>
+                <span class="toggle-line"></span>
+            </button>
             <div class="sidebar-content">
                 <div class="picker-section" id="book-picker">
                     <div class="book-grid" id="book-grid">
@@ -555,7 +568,7 @@
             </div>
         </div>
         
-        <div class="main-content sidebar-closed" id="main-content">
+        <div class="main-content" id="main-content">
         <main class="content">
             <div id="chapter-content" class="loading">
                 Loading...
@@ -969,7 +982,7 @@
         
         let touchStartX = 0;
         let touchStartY = 0;
-        let sidebarOpen = false;
+        let sidebarOpen = true;
         
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
@@ -1097,16 +1110,13 @@
             sidebarOpen = !sidebarOpen;
             const sidebar = document.getElementById('sidebar');
             const mainContent = document.getElementById('main-content');
-            const toggle = document.querySelector('.sidebar-toggle');
             
             if (sidebarOpen) {
                 sidebar.classList.remove('closed');
                 mainContent.classList.remove('sidebar-closed');
-                // Keep toggle in same position when sidebar is open
             } else {
                 sidebar.classList.add('closed');
                 mainContent.classList.add('sidebar-closed');
-                // Keep toggle in same position when sidebar is closed
             }
         }
         

@@ -1,23 +1,36 @@
 # Bible Reader
 
-A lightweight, minimal Bible reading web application built with native HTML, CSS, and JavaScript.
+A lightweight, minimal Bible reading application with ultra-minimal reader-mode styling.
+
+## Cross-Platform Development
+
+**IMPORTANT**: We use Tauri for all cross-platform development targeting:
+- Web browsers
+- iOS mobile
+- iOS iPad
+- Android mobile
+- Android tablet
 
 ## Features
 
-- Clean, readable interface optimized for text display
-- Book and chapter selection
-- Selectable text for easy copying
-- Responsive design for mobile and desktop
-- No external dependencies
+- Ultra-minimal reader-mode interface with complete Bible text
+- No navigation controls - pure text display
+- Loads complete Berean Standard Bible instantly
+- Minimal JavaScript (6 lines total)
+- Clean typography optimized for reading
 
 ## File Structure
 
-- `index.html` - Complete single-file web application
+- `index.html` - Ultra-minimal single-file web application
+- `BSB.ultra.json` - Complete Bible in ultra-compact format (3.8MB)
+- `BSB.ultra.json.gz` - Compressed version (1.2MB)
 
 ## Usage
 
-Open `index.html` in any modern web browser to use the Bible reader.
+Open `index.html` in any modern web browser to read the complete Bible text.
 
-## Size
+## Development Notes
 
-The application is designed to be lightweight (few KB) with all functionality contained in a single HTML file.
+- NEVER show partial text - always load complete Bible
+- Minimize JavaScript to absolute essentials
+- Use Tauri for cross-platform mobile/tablet deployment

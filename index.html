@@ -3,212 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bible Reader</title>
+    <title>Bible</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
             font-family: Georgia, serif;
-            line-height: 1.7;
-            color: #333;
-            background: #fafafa;
-            padding: 20px;
-        }
-        
-        .container {
+            line-height: 1.8;
+            color: #2c2c2c;
+            background: #ffffff;
+            padding: 40px 20px;
             max-width: 700px;
             margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
-        h1 {
-            text-align: center;
-            color: #2c3e50;
+        .book {
+            margin: 60px 0 0 0;
+        }
+        
+        .book-title {
+            font-size: 1.6em;
+            font-weight: normal;
             margin-bottom: 30px;
-            font-size: 2.2em;
+            color: #1a1a1a;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 10px;
         }
         
-        .controls {
-            text-align: center;
-            margin-bottom: 30px;
+        .chapter {
+            margin-bottom: 40px;
         }
         
-        select {
-            padding: 8px 16px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-            margin: 0 5px;
-            background: white;
-        }
-        
-        .chapter-content {
-            font-size: 18px;
-            line-height: 1.8;
-            text-align: justify;
+        .chapter-number {
+            font-size: 1.1em;
+            font-weight: normal;
+            margin: 25px 0 15px 0;
+            color: #666;
         }
         
         .verse {
-            margin-bottom: 12px;
+            margin-bottom: 6px;
             user-select: text;
         }
         
         .verse-number {
-            font-weight: bold;
-            color: #666;
-            margin-right: 8px;
-            font-size: 0.85em;
+            font-size: 0.75em;
+            color: #888;
+            margin-right: 6px;
             vertical-align: super;
-        }
-        
-        .chapter-title {
-            text-align: center;
-            font-size: 1.4em;
-            color: #2c3e50;
-            margin-bottom: 25px;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 10px;
-        }
-        
-        .loading {
-            text-align: center;
-            color: #666;
-            font-style: italic;
-            padding: 40px;
-        }
-        
-        @media (max-width: 600px) {
-            body {
-                padding: 10px;
-            }
-            
-            .container {
-                padding: 20px;
-            }
-            
-            h1 {
-                font-size: 1.8em;
-            }
-            
-            .chapter-content {
-                font-size: 16px;
-            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Bible Reader</h1>
-        
-        <div class="controls">
-            <select id="book-select" onchange="loadChapters()">
-                <option value="">Select Book</option>
-            </select>
-            <select id="chapter-select" onchange="loadChapter()" disabled>
-                <option value="">Select Chapter</option>
-            </select>
-        </div>
-        
-        <div id="content">
-            <div class="loading">Select a book and chapter to begin reading</div>
-        </div>
-    </div>
-
+    <div id="bible"></div>
+    <script src="BSB.ultra.json" type="application/json"></script>
     <script>
-        const bibleData = {
-            "Genesis": {
-                1: [
-                    "In the beginning God created the heaven and the earth.",
-                    "And the earth was without form, and void; and darkness was upon the face of the deep. And the Spirit of God moved upon the face of the waters.",
-                    "And God said, Let there be light: and there was light.",
-                    "And God saw the light, that it was good: and God divided the light from the darkness.",
-                    "And God called the light Day, and the darkness he called Night. And the evening and the morning were the first day."
-                ]
-            },
-            "John": {
-                1: [
-                    "In the beginning was the Word, and the Word was with God, and the Word was God.",
-                    "The same was in the beginning with God.",
-                    "All things were made by him; and without him was not any thing made that was made.",
-                    "In him was life; and the life was the light of men.",
-                    "And the light shineth in darkness; and the darkness comprehended it not."
-                ],
-                3: [
-                    "There was a man of the Pharisees, named Nicodemus, a ruler of the Jews:",
-                    "The same came to Jesus by night, and said unto him, Rabbi, we know that thou art a teacher come from God: for no man can do these miracles that thou doest, except God be with him.",
-                    "Jesus answered and said unto him, Verily, verily, I say unto thee, Except a man be born again, he cannot see the kingdom of God."
-                ]
-            },
-            "Psalms": {
-                23: [
-                    "The LORD is my shepherd; I shall not want.",
-                    "He maketh me to lie down in green pastures: he leadeth me beside the still waters.",
-                    "He restoreth my soul: he leadeth me in the paths of righteousness for his name's sake.",
-                    "Yea, though I walk through the valley of the shadow of death, I will fear no evil: for thou art with me; thy rod and thy staff they comfort me.",
-                    "Thou preparest a table before me in the presence of mine enemies: thou anointest my head with oil; my cup runneth over.",
-                    "Surely goodness and mercy shall follow me all the days of my life: and I will dwell in the house of the LORD for ever."
-                ]
-            }
-        };
-
-        function init() {
-            const bookSelect = document.getElementById('book-select');
-            Object.keys(bibleData).forEach(book => {
-                const option = document.createElement('option');
-                option.value = book;
-                option.textContent = book;
-                bookSelect.appendChild(option);
-            });
-        }
-
-        function loadChapters() {
-            const bookSelect = document.getElementById('book-select');
-            const chapterSelect = document.getElementById('chapter-select');
-            const book = bookSelect.value;
-            
-            chapterSelect.innerHTML = '<option value="">Select Chapter</option>';
-            chapterSelect.disabled = !book;
-            
-            if (book && bibleData[book]) {
-                Object.keys(bibleData[book]).forEach(chapter => {
-                    const option = document.createElement('option');
-                    option.value = chapter;
-                    option.textContent = `Chapter ${chapter}`;
-                    chapterSelect.appendChild(option);
+        fetch('BSB.ultra.json').then(r=>r.json()).then(d=>{
+            let h='';
+            d.forEach(b=>{
+                h+='<div class="book"><div class="book-title">'+b[0]+'</div>';
+                b[1].forEach((c,i)=>{
+                    h+='<div class="chapter"><div class="chapter-number">'+(i+1)+'</div>';
+                    c.forEach((v,j)=>h+='<div class="verse"><span class="verse-number">'+(j+1)+'</span>'+v+'</div>');
+                    h+='</div>';
                 });
-            }
-            
-            document.getElementById('content').innerHTML = '<div class="loading">Select a chapter to begin reading</div>';
-        }
-
-        function loadChapter() {
-            const bookSelect = document.getElementById('book-select');
-            const chapterSelect = document.getElementById('chapter-select');
-            const book = bookSelect.value;
-            const chapter = chapterSelect.value;
-            
-            if (!book || !chapter) return;
-            
-            const verses = bibleData[book][chapter];
-            const contentDiv = document.getElementById('content');
-            
-            let html = `<div class="chapter-title">${book} Chapter ${chapter}</div><div class="chapter-content">`;
-            verses.forEach((verse, index) => {
-                html += `<div class="verse"><span class="verse-number">${index + 1}</span>${verse}</div>`;
+                h+='</div>';
             });
-            html += '</div>';
-            
-            contentDiv.innerHTML = html;
-        }
-
-        document.addEventListener('DOMContentLoaded', init);
+            document.getElementById('bible').innerHTML=h;
+        });
     </script>
 </body>
 </html>

@@ -10,71 +10,16 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <style>
-        body {
-            font-family: Georgia, serif;
-            line-height: 1.8;
-            color: #2c2c2c;
-            background: #ffffff;
-            padding: 40px 20px;
-            max-width: 700px;
-            margin: 0 auto;
-        }
-        
-        .book {
-            margin: 60px 0 0 0;
-        }
-        
-        .book-title {
-            font-size: 1.6em;
-            font-weight: normal;
-            margin-bottom: 30px;
-            color: #1a1a1a;
-            border-bottom: 1px solid #e0e0e0;
-            padding-bottom: 10px;
-        }
-        
-        .chapter {
-            margin-bottom: 40px;
-        }
-        
-        .chapter-number {
-            font-size: 1.1em;
-            font-weight: normal;
-            margin: 25px 0 15px 0;
-            color: #666;
-        }
-        
-        .verse {
-            margin-bottom: 6px;
-            user-select: text;
-        }
-        
-        .verse-number {
-            font-size: 0.75em;
-            color: #888;
-            margin-right: 6px;
-            vertical-align: super;
-        }
-    </style>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none';">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <button class="theme-toggle" onclick="toggleTheme()">🌙 Dark</button>
     <div id="bible"></div>
-    <script src="BSB.ultra.json" type="application/json"></script>
-    <script>
-        fetch('BSB.ultra.json').then(r=>r.json()).then(d=>{
-            let h='';
-            d.forEach(b=>{
-                h+='<div class="book"><div class="book-title">'+b[0]+'</div>';
-                b[1].forEach((c,i)=>{
-                    h+='<div class="chapter"><div class="chapter-number">'+(i+1)+'</div>';
-                    c.forEach((v,j)=>h+='<div class="verse"><span class="verse-number">'+(j+1)+'</span>'+v+'</div>');
-                    h+='</div>';
-                });
-                h+='</div>';
-            });
-            document.getElementById('bible').innerHTML=h;
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>

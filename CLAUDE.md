@@ -2,15 +2,6 @@
 
 A lightweight, minimal Bible reading application with ultra-minimal reader-mode styling.
 
-## Cross-Platform Development
-
-**IMPORTANT**: We use Tauri for all cross-platform development targeting:
-- Web browsers
-- iOS mobile
-- iOS iPad
-- Android mobile
-- Android tablet
-
 ## Features
 
 - Ultra-minimal reader-mode interface with complete Bible text
@@ -33,4 +24,4 @@ Open `index.html` in any modern web browser to read the complete Bible text.
 
 - NEVER show partial text - always load complete Bible
 - Minimize JavaScript to absolute essentials
-- Use Tauri for cross-platform mobile/tablet deployment
+- PWA support for cross-platform installation (iOS, Android, desktop)

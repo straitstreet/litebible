@@ -57,10 +57,6 @@ export default {
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="swipe-indicator" id="swipeIndicator">
-        Swipe to navigate
-    </div>
-
     <div class="bible-container" id="bibleContainer">
         <div id="currentChapter"></div>
     </div>
@@ -252,11 +248,6 @@ export default {
         
         // Bible picker event listeners
         document.getElementById('pickerBackdrop').addEventListener('click', hideBiblePicker);
-        
-        // Hide swipe indicator after 3 seconds
-        setTimeout(() => {
-          document.getElementById('swipeIndicator').style.opacity = '0';
-        }, 3000);
       });
     </script>
 </body>
@@ -300,51 +291,15 @@ body {
     box-sizing: border-box;
 }
 
-
-.swipe-indicator {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: rgba(139, 69, 19, 0.6);
-    font-size: 0.8em;
-    text-align: center;
-    z-index: 1000;
-    transition: opacity 0.3s ease;
-}
-
-.swipe-indicator::before {
-    content: "↕";
-    display: block;
-    font-size: 1.2em;
-    margin-bottom: 4px;
-}
-
 .book-chapter-title {
     font-size: 1.6em;
     font-weight: normal;
-    margin-bottom: 20px;
     color: #8b4513;
     text-align: left;
     cursor: pointer;
     transition: all 0.3s ease;
     user-select: none;
     position: relative;
-}
-
-.book-chapter-title:hover {
-    color: #a0522d;
-}
-
-.book-chapter-title:hover::after {
-    content: '';
-    position: absolute;
-    bottom: -4px;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: currentColor;
-    opacity: 0.4;
 }
 
 .chapter-header {
@@ -392,13 +347,8 @@ body {
     }
 
 
-    .swipe-indicator {
-        color: rgba(212, 165, 116, 0.6);
-    }
-
     .book-chapter-title {
         color: #d4a574;
-        border-bottom-color: #4a4a4a;
     }
 
     .verse-number {
@@ -416,7 +366,7 @@ body {
     }
 
     .chapter-book-title {
-        color: #d4a574;
+        color: #e8e8e8;
     }
 
     .chapter-book-title:hover {
@@ -493,15 +443,13 @@ body {
 
 .picker-body {
     max-height: 60vh;
-    overflow-y: auto;
-    padding: 20px;
+    overflow-y: scroll;
 }
 
 .book-button {
     display: block;
     width: 100%;
     padding: 12px 0;
-    margin-bottom: 1px;
     background: none;
     border: none;
     cursor: pointer;
@@ -509,7 +457,6 @@ body {
     font-family: inherit;
     font-size: 1.05em;
     font-style: italic;
-    color: #1a1409;
     transition: all 0.2s ease;
     border-bottom: 1px solid rgba(139, 69, 19, 0.08);
 }
@@ -547,6 +494,7 @@ body {
 
 .chapter-book-title {
     font-size: 1.3em;
+    font-family: "Charter", "Iowan Old Style", "Source Serif Pro", "Crimson Text", serif;
     color: #6d3a0f;
     margin-bottom: 12px;
     font-weight: normal;
@@ -585,7 +533,6 @@ body {
     color: #1a1409;
     transition: all 0.2s ease;
     padding: 10px 0;
-    margin-bottom: 1px;
     border-bottom: 1px solid rgba(139, 69, 19, 0.08);
 }
 

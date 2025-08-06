@@ -1,6 +1,6 @@
 /* Light theme (Sepia) - Default */
 body {
-    font-family: Georgia, serif;
+    font-family: "Charter", "Iowan Old Style", "Source Serif Pro", "Crimson Text", "Minion Pro", "Lyon Text", "Sabon", "Palatino", "Hoefler Text", "Baskerville", "Georgia", serif;
     line-height: 1.8;
     color: #4a3728;
     background: #f7f3e9;
@@ -10,26 +10,6 @@ body {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.theme-toggle {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: rgba(255, 255, 255, 0.8);
-    border: 1px solid #d4c5a9;
-    border-radius: 20px;
-    padding: 8px 16px;
-    cursor: pointer;
-    font-size: 14px;
-    color: #4a3728;
-    backdrop-filter: blur(8px);
-    z-index: 1000;
-    transition: all 0.3s ease;
-}
-
-.theme-toggle:hover {
-    background: rgba(255, 255, 255, 0.9);
-    border-color: #b8a082;
-}
 
 .book {
     margin: 60px 0 0 0;
@@ -70,32 +50,23 @@ body {
     transition: color 0.3s ease;
 }
 
-/* Dark theme (Monokai-inspired) */
-[data-theme="dark"] {
-    color: #f8f8f2;
-    background: #272822;
-}
+/* Dark theme (Monokai-inspired) - Auto-detect system preference */
+@media (prefers-color-scheme: dark) {
+    body {
+        color: #f8f8f2;
+        background: #272822;
+    }
 
-[data-theme="dark"] .theme-toggle {
-    background: rgba(40, 40, 34, 0.8);
-    border-color: #75715e;
-    color: #f8f8f2;
-}
+    .book-title {
+        color: #a6e22e;
+        border-bottom-color: #49483e;
+    }
 
-[data-theme="dark"] .theme-toggle:hover {
-    background: rgba(40, 40, 34, 0.9);
-    border-color: #a6e22e;
-}
+    .chapter-number {
+        color: #fd971f;
+    }
 
-[data-theme="dark"] .book-title {
-    color: #a6e22e;
-    border-bottom-color: #49483e;
-}
-
-[data-theme="dark"] .chapter-number {
-    color: #fd971f;
-}
-
-[data-theme="dark"] .verse-number {
-    color: #ae81ff;
+    .verse-number {
+        color: #ae81ff;
+    }
 }

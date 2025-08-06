@@ -1,0 +1,5 @@
+{
+  "name": "litebible",
+  "compatibility_date": "2025-08-06",
+  "main": "src/index.js"
+}

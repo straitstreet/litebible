@@ -1,27 +1,30 @@
 # Bible Reader
 
-A lightweight, minimal Bible reading application with ultra-minimal reader-mode styling.
+A lightweight, minimal Bible reading application deployed as a Cloudflare Worker with ultra-minimal reader-mode styling.
 
 ## Features
 
 - Ultra-minimal reader-mode interface with complete Bible text
 - No navigation controls - pure text display
 - Loads complete Berean Standard Bible instantly
-- Minimal JavaScript (6 lines total)
+- Zero client-side JavaScript
 - Clean typography optimized for reading
+- Deployed as Cloudflare Worker for global edge distribution
 
 ## File Structure
 
-- `index.html` - Ultra-minimal single-file web application
+- `src/index.js` - Cloudflare Worker main handler
+- `src/bible-content.js` - Complete Bible content module
+- `wrangler.jsonc` - Cloudflare Workers deployment configuration
 - `BSB.ultra.json` - Complete Bible in ultra-compact format (3.8MB)
 - `BSB.ultra.json.gz` - Compressed version (1.2MB)
 
 ## Usage
 
-Open `index.html` in any modern web browser to read the complete Bible text.
+Deploy with `wrangler deploy` to Cloudflare Workers. Access at your worker's URL.
 
 ## Development Notes
 
 - NEVER show partial text - always load complete Bible
-- Minimize JavaScript to absolute essentials
-- PWA support for cross-platform installation (iOS, Android, desktop)
+- Zero client-side JavaScript - all content served from edge
+- Responsive CSS with dark/light mode support

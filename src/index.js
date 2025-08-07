@@ -281,7 +281,7 @@ body {
     top: 0;
     left: 0;
     right: 0;
-    z-index: 100;
+    z-index: 1000;
     background: rgba(247, 243, 233, 0.95);
     backdrop-filter: blur(10px);
     transform: translateY(0);
@@ -359,11 +359,12 @@ body {
     bottom: -1px;
     left: 0;
     right: 0;
-    height: 20px;
-    background: linear-gradient(to bottom, transparent, rgba(247, 243, 233, 0.95));
-    opacity: 0;
+    height: 30px;
+    background: linear-gradient(to bottom, transparent 0%, rgba(247, 243, 233, 0.8) 70%, rgba(247, 243, 233, 0.98) 100%);
+    opacity: 1;
     transition: opacity 0.3s ease;
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(12px);
+    pointer-events: none;
 }
 
 /* Main content */
@@ -372,6 +373,8 @@ body {
     overflow-y: auto;
     padding-top: 70px;
     scroll-behavior: smooth;
+    position: relative;
+    z-index: 1;
 }
 
 .chapter-section {
@@ -619,7 +622,7 @@ body {
 
 
     .scroll-blur-mask {
-        background: linear-gradient(to bottom, transparent, rgba(26, 24, 18, 0.95));
+        background: linear-gradient(to bottom, transparent 0%, rgba(26, 24, 18, 0.8) 70%, rgba(26, 24, 18, 0.98) 100%);
     }
 
     .verse-number {

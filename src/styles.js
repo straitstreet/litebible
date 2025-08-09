@@ -31,7 +31,7 @@ export default `/* CSS Custom Properties for theming - controlled entirely by Ja
 
 body {
     font-family: "Charter", "Iowan Old Style", "Source Serif Pro", "Crimson Text", "Minion Pro", "Lyon Text", "Sabon", "Palatino", "Hoefler Text", "Baskerville", "Georgia", serif;
-    line-height: 1.6; /* Optimized for biblical reading */
+    line-height: 1.55; /* Tighter line height */
     color: var(--text-color);
     background: var(--bg-color);
     margin: 0;
@@ -40,6 +40,8 @@ body {
     text-rendering: optimizeSpeed;
     contain: layout style;
     font-display: swap; /* Prevent FOIT, allow FOUT for better CLS */
+    font-weight: 400; /* Lighter weight for better readability */
+    font-size: 17px; /* Slightly larger font size */
 }
 
 /* Header */
@@ -106,7 +108,7 @@ body {
     min-height: calc(100vh - 70px);
     contain: layout;
     font-family: var(--reading-font);
-    line-height: 1.65; /* Optimal for biblical reading - better than 1.8 */
+    line-height: 1.55; /* Tighter line height for better reading density */
 }
 
 .chapter-section.active {
@@ -147,7 +149,7 @@ body {
 .chapter-title {
     margin: 0;
     font-size: 2.2em;
-    font-weight: 300;
+    font-weight: 600; /* Bold for chapter titles */
     color: var(--accent-color);
     opacity: 0.85;
     letter-spacing: 0.5px;
@@ -470,7 +472,7 @@ body.settings-modal-open .app-header {
     color: var(--accent-color);
     text-align: center;
     margin: 40px 0 60px 0;
-    font-weight: 300;
+    font-weight: 400;
     letter-spacing: 1px;
     opacity: 0.9;
 }

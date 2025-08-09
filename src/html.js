@@ -43,7 +43,7 @@ export default `<!DOCTYPE html>
 
         body {
             font-family: "Charter", "Iowan Old Style", "Source Serif Pro", "Crimson Text", "Minion Pro", "Lyon Text", "Sabon", "Palatino", "Hoefler Text", "Baskerville", "Georgia", serif;
-            line-height: 1.8;
+            line-height: 1.55;
             color: var(--text-color, #2c2416);
             background: var(--bg-color, #f7f3e9);
             margin: 0;
@@ -51,6 +51,7 @@ export default `<!DOCTYPE html>
             overflow-x: hidden;
             text-rendering: optimizeSpeed;
             contain: layout style;
+            font-size: 17px;
         }
 
         /* Header */
@@ -107,7 +108,7 @@ export default `<!DOCTYPE html>
         .chapter-title {
             margin: 0;
             font-size: 2.2em;
-            font-weight: 300;
+            font-weight: 600;
             color: #8b4513;
             opacity: 0.85;
             letter-spacing: 0.5px;

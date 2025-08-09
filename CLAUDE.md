@@ -4,10 +4,11 @@ A lightweight, minimal Bible reading application deployed as a Cloudflare Worker
 
 ## Features
 
-- Ultra-minimal reader-mode interface with complete Bible text
-- No navigation controls - pure text display
-- Loads complete Berean Standard Bible instantly
-- Zero client-side JavaScript
+- Ultra-minimal reader-mode interface with progressive Bible loading
+- Loads John 1 + surrounding chapters instantly for fast initial page load
+- Background loading of complete Berean Standard Bible after initial render
+- Browser caching for offline reading and instant subsequent loads
+- Zero client-side JavaScript for plain version
 - Clean typography optimized for reading
 - Deployed as Cloudflare Worker for global edge distribution
 
@@ -25,6 +26,12 @@ Deploy with `wrangler deploy` to Cloudflare Workers. Access at your worker's URL
 
 ## Development Notes
 
-- NEVER show partial text - always load complete Bible
-- Zero client-side JavaScript - all content served from edge
+- Progressive loading strategy: Load John 1 + surrounding chapters first, then complete Bible in background
+- Initial load should show John 1 with prev/next chapters for immediate usability
+- Browser caching: Store complete Bible data in localStorage/IndexedDB after first load
+- Cache invalidation: Version-based cache busting for Bible data updates
+- Offline support: Cached Bible data enables offline reading after first visit
+- Plain version: Zero client-side JavaScript - all content served from edge
+- Interactive version: Progressive enhancement with background loading and caching
 - Responsive CSS with dark/light mode support
+- Prioritize fast initial page load over complete data availability

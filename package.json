@@ -10,9 +10,10 @@
     "deploy": "wrangler deploy"
   },
   "devDependencies": {
-    "wrangler": "^3.0.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
-    "jsdom": "^22.1.0"
+    "jsdom": "^22.1.0",
+    "terser": "^5.43.1",
+    "wrangler": "^3.0.0"
   }
 }

@@ -1,7 +1,7 @@
 export default `// Bible data and current chapter tracking
 let bibleBooks = window.bibleInitialData || []; // Start with initial data
 let fullBibleLoaded = false;
-let currentBookIndex = 1; // Start with John (index 1 in initial data: Luke=0, John=1)
+let currentBookIndex = 0; // Start with John (index 0 in initial data - only John exists)
 let currentChapterIndex = 0;
 let loadedChapters = new Map(); // Map: chapterKey -> DOM element
 let scrollContainer = null;
@@ -30,12 +30,11 @@ async function loadFullBible() {
       // Use cached data
       bibleBooks = JSON.parse(cachedData);
       fullBibleLoaded = true;
-      console.log('Loaded full Bible from cache');
+      
       return;
     }
     
     // Fetch from API
-    console.log('Loading full Bible in background...');
     const response = await fetch('/api/bible-data');
     const fullData = await response.json();
     
@@ -44,16 +43,19 @@ async function loadFullBible() {
       localStorage.setItem(CACHE_KEY, JSON.stringify(fullData));
       localStorage.setItem(CACHE_VERSION_KEY, CURRENT_VERSION);
     } catch (e) {
-      console.log('Cache storage failed (quota exceeded)');
+      // Cache storage failed (quota exceeded)
     }
     
     bibleBooks = fullData;
     fullBibleLoaded = true;
     
     // Update current book index for full Bible (John is index 42)
-    currentBookIndex = 42;
+    // Check if we were viewing John in the limited initial data
+    const wasViewingJohnInLimitedData = currentBookIndex === 0;
+    if (wasViewingJohnInLimitedData) {
+      currentBookIndex = 42; // John in full Bible
+    }
     
-    console.log('Full Bible loaded and cached');
   } catch (error) {
     console.error('Failed to load full Bible:', error);
   }
@@ -114,8 +116,7 @@ function handleHeaderScroll(scrollTop) {
   lastScrollTop = scrollTop;
 }
 
-
-// Initialize chapters with simplified loading
+// Initialize chapters with transparency approach (like goToChapter)
 function initializeChapters() {
   scrollContainer = document.getElementById('bibleContainer');
   const container = document.getElementById('currentChapter');
@@ -124,11 +125,6 @@ function initializeChapters() {
   container.innerHTML = '';
   loadedChapters.clear();
   
-  // Force immediate render to prevent flashes
-  container.style.display = 'none';
-  container.offsetHeight; // Force reflow
-  container.style.display = '';
-  
   // Start background loading of full Bible immediately
   loadFullBible();
   
@@ -136,14 +132,52 @@ function initializeChapters() {
   if (fullBibleLoaded) {
     currentBookIndex = 42; // John in full Bible
   } else {
-    currentBookIndex = 0; // John in initial data (only John now)
+    currentBookIndex = 0; // John in initial data (only John exists)
   }
   currentChapterIndex = 0; // Chapter 1
   
-  // Load ONLY John 1 initially - no surrounding chapters
+  // STEP 1: Make container invisible during loading to prevent jumps
+  container.style.opacity = '0';
+  container.style.transition = 'opacity 0.15s ease';
+  
+  // Load John 1 first (target chapter)
   loadChapter(currentBookIndex, currentChapterIndex);
   
-  setupInfiniteScroll();
+  // STEP 2: Load surrounding chapters while invisible
+  setTimeout(() => {
+    // Load preceding chapters if available
+    for (let i = 1; i <= 2; i++) {
+      const prevChapter = getPreviousChapterFrom(currentBookIndex, currentChapterIndex, i);
+      if (prevChapter) {
+        loadChapter(prevChapter.bookIndex, prevChapter.chapterIndex);
+      }
+    }
+    
+    // Load next chapters from initial data or full Bible
+    for (let i = 1; i <= 2; i++) {
+      const nextChapter = getNextChapterFrom(currentBookIndex, currentChapterIndex, i);
+      if (nextChapter) {
+        loadChapter(nextChapter.bookIndex, nextChapter.chapterIndex);
+      }
+    }
+    
+    // STEP 3: Position to John 1 and reveal
+    setTimeout(() => {
+      // Scroll to John 1 while still invisible
+      scrollToChapter(currentBookIndex, currentChapterIndex, false);
+      
+      // STEP 4: Reveal the content smoothly
+      setTimeout(() => {
+        container.style.opacity = '1';
+        
+        // Setup infinite scroll and handle initial content check
+        setupInfiniteScroll();
+        handleScroll(); // Initial content loading check
+      }, 20); // Small delay to ensure scroll is complete
+      
+    }, 30); // Allow DOM updates to complete
+    
+  }, 20); // Small delay for initial chapter to load
 }
 
 // Load a range of chapters in correct order
@@ -351,52 +385,45 @@ function setupInfiniteScroll() {
 
 // Track scroll direction for proactive loading
 let lastScrollPosition = 0;
-let hasLoadedPrevious = false;
-let hasLoadedNext = false;
 
-// Handle scroll events with proactive loading
+// Handle scroll events with position-based loading
 function handleScroll() {
   const scrollTop = scrollContainer.scrollTop;
   const scrollHeight = scrollContainer.scrollHeight;
   const clientHeight = scrollContainer.clientHeight;
   
-  // Detect scroll direction
-  const scrollDirection = scrollTop > lastScrollPosition ? 'down' : 'up';
-  const scrollDelta = Math.abs(scrollTop - lastScrollPosition);
-  
   // Handle header visibility
   handleHeaderScroll(scrollTop);
   
-  // Proactive loading on first significant downward scroll (load both directions)
-  if (scrollDirection === 'down' && scrollDelta > 30 && (!hasLoadedPrevious || !hasLoadedNext)) {
-    console.log('First downward scroll detected - loading surrounding chapters');
-    
-    if (!hasLoadedPrevious) {
-      console.log('Loading previous chapters');
-      loadAdjacentChapters('previous');
-      hasLoadedPrevious = true;
-    }
-    
-    if (!hasLoadedNext) {
-      console.log('Loading next chapters');  
-      loadAdjacentChapters('next');
-      hasLoadedNext = true;
-    }
-  }
+  // Calculate scroll position as percentage (0.0 to 1.0)
+  const maxScroll = scrollHeight - clientHeight;
+  const scrollPercentage = maxScroll > 0 ? scrollTop / maxScroll : 0;
   
-  // Traditional boundary loading as backup
-  const buffer = clientHeight * 0.5; // Smaller buffer since we're proactive
+  // Position-based loading thresholds
+  const topLoadThreshold = 0.2;    // Load more content when within 20% of top
+  const bottomLoadThreshold = 0.8; // Load more content when within 20% of bottom
   
-  // Load previous chapters when near top
-  if (scrollTop < buffer && !hasLoadedPrevious) {
+  // Detect if we need more content based on scroll position
+  const needsContentAbove = scrollPercentage < topLoadThreshold;
+  const needsContentBelow = scrollPercentage > bottomLoadThreshold;
+  
+  // Load content based on position, not flags
+  if (needsContentAbove) {
+    
     loadAdjacentChapters('previous');
-    hasLoadedPrevious = true;
   }
   
-  // Load next chapters when near bottom
-  if (scrollTop + clientHeight > scrollHeight - buffer && !hasLoadedNext) {
+  if (needsContentBelow) {
+    
     loadAdjacentChapters('next');
-    hasLoadedNext = true;
+  }
+  
+  // For very limited content, load both directions immediately
+  const isLimitedContent = scrollHeight < clientHeight * 1.5;
+  if (isLimitedContent) {
+    
+    loadAdjacentChapters('previous');
+    loadAdjacentChapters('next');
   }
   
   // Update current chapter tracking
@@ -409,25 +436,44 @@ function handleScroll() {
   lastScrollPosition = scrollTop;
 }
 
-// Load adjacent chapters with throttling to prevent excessive loading
-let lastLoadDirection = null;
-let loadThrottleTimeout = null;
+// Load adjacent chapters with smart throttling
+let loadingInProgress = new Set(); // Track which directions are currently loading
+let lastLoadTime = { previous: 0, next: 0 }; // Track last load time for each direction
 
-function loadAdjacentChapters(direction) {
-  // Throttle loading to prevent excessive requests
-  if (loadThrottleTimeout) return;
+async function loadAdjacentChapters(direction) {
+  // Prevent concurrent loading in same direction
+  if (loadingInProgress.has(direction)) {
+    return;
+  }
   
-  loadThrottleTimeout = setTimeout(() => {
-    loadThrottleTimeout = null;
-  }, 100);
+  // Throttle loading but allow more frequent calls (reduced from 100ms to 50ms)
+  const now = Date.now();
+  const minInterval = 50;
+  if (now - lastLoadTime[direction] < minInterval) {
+    return;
+  }
+  
+  lastLoadTime[direction] = now;
+  loadingInProgress.add(direction);
+  
+  // If we don't have full Bible loaded yet, wait for it and update current position
+  if (!fullBibleLoaded) {
+    await loadFullBible();
+    // Update current position to full Bible coordinates (John becomes index 42)
+    if (fullBibleLoaded && currentBookIndex === 0) {
+      currentBookIndex = 42; // John in full Bible
+    }
+  }
   
   if (direction === 'previous') {
     // Use current chapter as reference, not first loaded chapter
     const targetChapterKey = currentBookIndex + '-' + currentChapterIndex;
     
-    // Only load if we don't already have enough chapters before current
+    // Load more chapters when we have limited data
+    const isLimitedData = bibleBooks.length === 1 || !fullBibleLoaded;
+    const maxChaptersToLoad = isLimitedData ? 5 : 2; // Load more for limited data
+    
     const chaptersToLoad = [];
-    const maxChaptersToLoad = 2; // Limit to loading just 2 chapters at a time
     
     for (let i = 1; i <= maxChaptersToLoad; i++) {
       const prevChapter = getPreviousChapterFrom(currentBookIndex, currentChapterIndex, i);
@@ -443,7 +489,7 @@ function loadAdjacentChapters(direction) {
     
     // Only load if we have chapters to load
     if (chaptersToLoad.length > 0) {
-      console.log('PREPENDING chapters before current chapter:', targetChapterKey, chaptersToLoad);
+      
       // Load chapters in chronological order (earliest first)
       chaptersToLoad.forEach(chapter => {
         loadChapter(chapter.bookIndex, chapter.chapterIndex);
@@ -453,9 +499,11 @@ function loadAdjacentChapters(direction) {
     // Use current chapter as reference, similar to previous direction
     const targetChapterKey = currentBookIndex + '-' + currentChapterIndex;
     
-    // Only load if we don't already have enough chapters after current
+    // Load more chapters when we have limited data
+    const isLimitedData = bibleBooks.length === 1 || !fullBibleLoaded;
+    const maxChaptersToLoad = isLimitedData ? 5 : 2; // Load more for limited data
+    
     const chaptersToLoad = [];
-    const maxChaptersToLoad = 2; // Limit to loading just 2 chapters at a time
     
     for (let i = 1; i <= maxChaptersToLoad; i++) {
       const nextChapter = getNextChapterFrom(currentBookIndex, currentChapterIndex, i);
@@ -471,12 +519,15 @@ function loadAdjacentChapters(direction) {
     
     // Only load if we have chapters to load
     if (chaptersToLoad.length > 0) {
-      console.log('APPENDING chapters after current chapter:', targetChapterKey, chaptersToLoad);
+      
       chaptersToLoad.forEach(chapter => {
         loadChapter(chapter.bookIndex, chapter.chapterIndex);
       });
     }
   }
+  
+  // Always clear the loading flag when done
+  loadingInProgress.delete(direction);
 }
 
 // Helper functions for navigation
@@ -627,72 +678,118 @@ function updateCurrentChapterFromScroll() {
   }
 }
 
-// Clean up chapters far from current viewport (less aggressive)
+// Clean up chapters far from current viewport (maintains order)
 function cleanupDistantChapters() {
-  const maxLoadedChapters = 12; // Keep more chapters loaded
+  const maxLoadedChapters = 15; // Keep more chapters loaded for better UX
   if (loadedChapters.size <= maxLoadedChapters) return;
   
-  // Get current scroll position
+  // Get current scroll position and find visible chapters
   const scrollTop = scrollContainer.scrollTop;
   const containerHeight = scrollContainer.clientHeight;
-  const viewportCenter = scrollTop + containerHeight / 2;
+  const viewportTop = scrollTop;
+  const viewportBottom = scrollTop + containerHeight;
   
-  // Calculate distances from viewport center
-  const chapterDistances = [];
+  // Find chapters that are far from viewport
+  const chaptersToRemove = [];
   loadedChapters.forEach((element, key) => {
     const rect = element.getBoundingClientRect();
     const containerRect = scrollContainer.getBoundingClientRect();
-    const chapterCenter = rect.top - containerRect.top + scrollTop + rect.height / 2;
-    const distance = Math.abs(chapterCenter - viewportCenter);
+    const elementTop = rect.top - containerRect.top + scrollTop;
+    const elementBottom = elementTop + rect.height;
     
-    // Keep chapters within 3 viewports
-    const minDistance = containerHeight * 3;
-    if (distance > minDistance) {
-      chapterDistances.push({ key, distance, element });
+    // Calculate distance from viewport
+    let distance = 0;
+    if (elementBottom < viewportTop) {
+      // Above viewport
+      distance = viewportTop - elementBottom;
+    } else if (elementTop > viewportBottom) {
+      // Below viewport
+      distance = elementTop - viewportBottom;
+    }
+    
+    // Remove chapters that are more than 5 viewports away
+    const removalDistance = containerHeight * 5;
+    if (distance > removalDistance) {
+      chaptersToRemove.push({ key, element, distance });
     }
   });
   
-  // Only remove the most distant chapters
-  if (chapterDistances.length > 2) {
-    chapterDistances.sort((a, b) => b.distance - a.distance);
-    const chaptersToRemove = Math.min(2, chapterDistances.length);
-    const toRemove = chapterDistances.slice(0, chaptersToRemove);
+  // Sort by distance (farthest first) and remove gradually
+  if (chaptersToRemove.length > 0) {
+    chaptersToRemove.sort((a, b) => b.distance - a.distance);
+    const chaptersToRemoveCount = Math.min(3, chaptersToRemove.length);
     
-    toRemove.forEach(({ key, element }) => {
+    for (let i = 0; i < chaptersToRemoveCount; i++) {
+      const { key, element } = chaptersToRemove[i];
       element.remove();
       loadedChapters.delete(key);
-    });
+      
+    }
   }
 }
 
-// Navigate to specific chapter - load only the target chapter
+// Navigate to specific chapter - smooth loading with transparency
 function goToChapter(bookIndex, chapterIndex) {
   // Clear all existing chapters
   const container = document.getElementById('currentChapter');
   container.innerHTML = '';
   loadedChapters.clear();
   
-  // Force immediate render to prevent flashes
-  container.style.display = 'none';
-  container.offsetHeight; // Force reflow
-  container.style.display = '';
-  
   // Update current position
   currentBookIndex = bookIndex;
   currentChapterIndex = chapterIndex;
   
-  // Load ONLY the target chapter - no surrounding chapters
+  // Reset scroll position and clear loading state
+  lastScrollPosition = 0;
+  loadingInProgress.clear();
+  lastLoadTime = { previous: 0, next: 0 };
+  
+  // STEP 1: Make container invisible during loading to prevent jumps
+  
+  container.style.opacity = '0';
+  container.style.transition = 'opacity 0.15s ease';
+  
+  // Load the target chapter first
   loadChapter(bookIndex, chapterIndex);
   
-  // Reset proactive loading flags for new chapter
-  hasLoadedPrevious = false;
-  hasLoadedNext = false;
-  lastScrollPosition = 0;
+  // STEP 2: Load surrounding chapters while invisible
+  setTimeout(() => {
+    
+    // Load previous chapters (will be prepended)
+    for (let i = 1; i <= 3; i++) {
+      const prevChapter = getPreviousChapterFrom(bookIndex, chapterIndex, i);
+      if (prevChapter) {
+        loadChapter(prevChapter.bookIndex, prevChapter.chapterIndex);
+      }
+    }
+    
+    // Load next chapters (will be appended)
+    for (let i = 1; i <= 3; i++) {
+      const nextChapter = getNextChapterFrom(bookIndex, chapterIndex, i);
+      if (nextChapter) {
+        loadChapter(nextChapter.bookIndex, nextChapter.chapterIndex);
+      }
+    }
+    
+    // STEP 3: Position to target chapter and reveal
+    setTimeout(() => {
+      // Scroll to target chapter while still invisible
+      scrollToChapter(bookIndex, chapterIndex, false);
+      
+      // STEP 4: Reveal the content smoothly
+      setTimeout(() => {
+        container.style.opacity = '1';
+        
+        // Final content loading check
+        handleScroll();
+      }, 20); // Small delay to ensure scroll is complete
+      
+    }, 30); // Allow DOM updates to complete
+    
+  }, 20); // Small delay for initial chapter to load
   
   hideBiblePicker();
 }
-
-
 
 // Bible picker functions
 function showBiblePicker() {
@@ -707,18 +804,279 @@ function hideBiblePicker() {
   document.getElementById('biblePicker').style.display = 'none';
 }
 
-// About modal functions
-function showAboutModal() {
-  document.getElementById('aboutModal').style.display = 'flex';
+// Settings modal functions
+let pendingSettings = null; // Store settings to apply after modal closes
+
+function showSettingsModal() {
+  document.body.classList.add('settings-modal-open');
+  document.getElementById('settingsModal').style.display = 'flex';
+  loadCurrentSettings();
+  
+  // Store current settings as baseline for changes
+  pendingSettings = getSettings();
 }
 
-function hideAboutModal() {
-  document.getElementById('aboutModal').style.display = 'none';
+function hideSettingsModal() {
+  document.body.classList.remove('settings-modal-open');
+  document.getElementById('settingsModal').style.display = 'none';
+  
+  // Settings are already applied live during selection, no need to reapply
+  pendingSettings = null;
+}
+
+// Settings persistence
+const SETTINGS_KEY = 'litebible-settings';
+
+function loadCurrentSettings() {
+  const settings = getSettings();
+  
+  // Update font selection
+  const fontRadio = document.querySelector('input[name="font"][value="' + settings.font + '"]');
+  if (fontRadio) fontRadio.checked = true;
+}
+
+function getSettings() {
+  const defaultSettings = { font: 'system-serif' };
+  try {
+    const stored = localStorage.getItem(SETTINGS_KEY);
+    return stored ? { ...defaultSettings, ...JSON.parse(stored) } : defaultSettings;
+  } catch (e) {
+    return defaultSettings;
+  }
+}
+
+function saveSettings(settings) {
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  } catch (e) {
+    // Storage failed - continue silently
+  }
+}
+
+async function applyFont(fontChoice) {
+  const root = document.documentElement;
+  
+  // For custom fonts, wait for them to load before applying
+  if (fontChoice !== 'system-serif' && fontChoice !== 'system-sans') {
+    try {
+      await loadCustomFonts(fontChoice);
+    } catch (error) {
+      console.error('Failed to load font:', fontChoice, error);
+      // Fallback to system font if loading fails
+      fontChoice = 'system-serif';
+    }
+  }
+  
+  switch (fontChoice) {
+    case 'system-serif':
+      root.style.setProperty('--reading-font', '"Charter", "Iowan Old Style", "Source Serif Pro", "Crimson Text", "Minion Pro", "Lyon Text", "Sabon", "Palatino", "Hoefler Text", "Baskerville", "Georgia", serif');
+      break;
+    case 'system-sans':
+      root.style.setProperty('--reading-font', '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif');
+      break;
+    case 'serif':
+      root.style.setProperty('--reading-font', '"Crimson Text", "Crimson Pro", serif');
+      break;
+    case 'sans':
+      root.style.setProperty('--reading-font', '"Source Sans Pro", "Source Sans 3", sans-serif');
+      break;
+    case 'slab':
+      root.style.setProperty('--reading-font', '"Zilla Slab", "Roboto Slab", slab-serif');
+      break;
+    default: // fallback to system-serif
+      root.style.setProperty('--reading-font', '"Charter", "Iowan Old Style", "Source Serif Pro", "Crimson Text", "Minion Pro", "Lyon Text", "Sabon", "Palatino", "Hoefler Text", "Baskerville", "Georgia", serif');
+  }
+}
+
+// Theme color definitions
+const THEMES = {
+  light: {
+    '--bg-color': '#f7f3e9',
+    '--text-color': '#2c2416',
+    '--header-bg': 'rgba(247, 243, 233, 0.98)',
+    '--border-color': 'rgba(139, 69, 19, 0.1)',
+    '--accent-color': '#8b4513',
+    '--verse-number-color': '#a0522d',
+    '--modal-bg': 'rgba(247, 243, 233, 0.98)',
+    '--modal-text': '#2c2416',
+    '--button-hover': 'rgba(139, 69, 19, 0.1)'
+  },
+  dark: {
+    '--bg-color': '#1a1812',
+    '--text-color': '#e4e0d6',
+    '--header-bg': 'rgba(26, 24, 18, 0.98)',
+    '--border-color': 'rgba(164, 137, 87, 0.15)',
+    '--accent-color': '#d4b896',
+    '--verse-number-color': '#c9a876',
+    '--modal-bg': 'rgba(26, 24, 18, 0.98)',
+    '--modal-text': '#e4e0d6',
+    '--button-hover': 'rgba(212, 184, 150, 0.1)'
+  }
+};
+
+// System theme detection
+function getSystemTheme() {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function applyThemeColors(colors) {
+  const root = document.documentElement;
+  Object.entries(colors).forEach(([property, value]) => {
+    root.style.setProperty(property, value);
+  });
+}
+
+function applyTheme(themeChoice) {
+  const root = document.documentElement;
+  
+  // Remove existing theme classes (cleanup)
+  root.classList.remove('theme-light', 'theme-dark', 'theme-auto');
+  
+  let actualTheme;
+  
+  switch (themeChoice) {
+    case 'light':
+      actualTheme = 'light';
+      root.classList.add('theme-light');
+      break;
+    case 'dark':
+      actualTheme = 'dark';
+      root.classList.add('theme-dark');
+      break;
+    default: // auto
+      actualTheme = getSystemTheme();
+      root.classList.add('theme-auto');
+      
+      // Listen for system theme changes when in auto mode
+      if (!window.litebibleThemeListener) {
+        window.litebibleThemeListener = (e) => {
+          const currentSettings = getSettings();
+          if (currentSettings.theme === 'auto') {
+            applyThemeColors(THEMES[e.matches ? 'dark' : 'light']);
+          }
+        };
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', window.litebibleThemeListener);
+      }
+      break;
+  }
+  
+  // Apply the colors directly to CSS custom properties
+  applyThemeColors(THEMES[actualTheme]);
+}
+
+async function handleSettingsChange() {
+  const fontChoice = document.querySelector('input[name="font"]:checked')?.value || 'system-serif';
+  
+  const settings = { font: fontChoice };
+  
+  // Save settings
+  saveSettings(settings);
+  
+  // Apply font change immediately for live preview
+  await applyFont(fontChoice);
+}
+
+// Track font loading status
+const fontLoadingStatus = {
+  'serif': false,
+  'sans': false,
+  'slab': false
+};
+
+function loadCustomFonts(fontChoice) {
+  // System fonts don't need loading
+  if (fontChoice === 'system-serif' || fontChoice === 'system-sans') {
+    return Promise.resolve();
+  }
+  
+  // Return existing promise if font is already being loaded
+  if (window['fontPromise_' + fontChoice]) {
+    return window['fontPromise_' + fontChoice];
+  }
+  
+  // Check if font is already loaded
+  if (fontLoadingStatus[fontChoice]) {
+    return Promise.resolve();
+  }
+  
+  const fontPromise = new Promise((resolve, reject) => {
+    // Don't load if already loaded
+    if (document.querySelector('#font-' + fontChoice)) {
+      fontLoadingStatus[fontChoice] = true;
+      resolve();
+      return;
+    }
+    
+    const link = document.createElement('link');
+    link.id = 'font-' + fontChoice;
+    link.rel = 'stylesheet';
+    link.media = 'print'; // Load without applying
+    
+    let fontFamily;
+    switch (fontChoice) {
+      case 'serif':
+        link.href = 'https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap';
+        fontFamily = 'Crimson Text';
+        break;
+      case 'sans':
+        link.href = 'https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;0,600;1,400&display=swap';
+        fontFamily = 'Source Sans Pro';
+        break;
+      case 'slab':
+        link.href = 'https://fonts.googleapis.com/css2?family=Zilla+Slab:ital,wght@0,400;0,600;1,400&display=swap';
+        fontFamily = 'Zilla Slab';
+        break;
+      default:
+        resolve();
+        return;
+    }
+    
+    link.onload = () => {
+      // Switch to 'all' media to apply the CSS
+      link.media = 'all';
+      
+      // Use Font Loading API to ensure font is actually loaded
+      if ('fonts' in document) {
+        // Wait for the specific font to be loaded
+        Promise.all([
+          document.fonts.load('400 16px "' + fontFamily + '"'),
+          document.fonts.load('600 16px "' + fontFamily + '"')
+        ]).then(() => {
+          fontLoadingStatus[fontChoice] = true;
+          resolve();
+        }).catch(() => {
+          // Fallback if Font Loading API fails
+          setTimeout(() => {
+            fontLoadingStatus[fontChoice] = true;
+            resolve();
+          }, 100);
+        });
+      } else {
+        // Fallback for browsers without Font Loading API
+        setTimeout(() => {
+          fontLoadingStatus[fontChoice] = true;
+          resolve();
+        }, 200);
+      }
+    };
+    
+    link.onerror = () => {
+      console.warn('Font loading failed, falling back to system font:', fontChoice);
+      fontLoadingStatus[fontChoice] = false;
+      reject(new Error('Failed to load font: ' + fontChoice));
+    };
+    
+    document.head.appendChild(link);
+  });
+  
+  // Cache the promise
+  window['fontPromise_' + fontChoice] = fontPromise;
+  return fontPromise;
 }
 
 // Make modal functions globally available for inline onclick handlers
-window.showAboutModal = showAboutModal;
-window.hideAboutModal = hideAboutModal;
+window.showSettingsModal = showSettingsModal;
+window.hideSettingsModal = hideSettingsModal;
 
 // Single header element now opens the book picker directly
 
@@ -799,26 +1157,45 @@ function selectBook(bookIndex, bookName, chapters) {
   pickerBody.appendChild(chapterList);
 }
 
-
-
 // Initialize - handle both DOM ready and already loaded states
-function initialize() {
+async function initialize() {
+  // Apply theme immediately for no flash
+  applyTheme('auto');
+  
+  // Apply saved settings BEFORE initializing chapters for fast load
+  const settings = getSettings();
+  
+  // Don't await font loading - let it happen in background for system fonts
+  if (settings.font === 'system-serif' || settings.font === 'system-sans') {
+    applyFont(settings.font); // System fonts apply instantly
+  } else {
+    // For Google Fonts, apply after loading to avoid FOIT
+    applyFont(settings.font);
+  }
+  
   initializeChapters();
   
   // Event listeners
   document.getElementById('pickerBackdrop').addEventListener('click', hideBiblePicker);
-  document.getElementById('aboutBackdrop').addEventListener('click', hideAboutModal);
+  document.getElementById('settingsBackdrop').addEventListener('click', hideSettingsModal);
+  
+  // Settings change listeners
+  document.addEventListener('change', (event) => {
+    if (event.target.name === 'font') {
+      handleSettingsChange();
+    }
+  });
   
   // Escape key to close modals
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
       const biblePicker = document.getElementById('biblePicker');
-      const aboutModal = document.getElementById('aboutModal');
+      const settingsModal = document.getElementById('settingsModal');
       
       if (biblePicker.style.display === 'flex') {
         hideBiblePicker();
-      } else if (aboutModal.style.display === 'flex') {
-        hideAboutModal();
+      } else if (settingsModal.style.display === 'flex') {
+        hideSettingsModal();
       }
     }
   });

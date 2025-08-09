@@ -1,4 +1,20 @@
-export default `/* Base styling with performance optimizations */
+export default `/* CSS Custom Properties for theming - controlled entirely by JavaScript */
+:root {
+    --reading-font: "Charter", "Iowan Old Style", "Source Serif Pro", "Crimson Text", "Minion Pro", "Lyon Text", "Sabon", "Palatino", "Hoefler Text", "Baskerville", "Georgia", serif;
+    
+    /* Default light theme colors - will be overridden by JS */
+    --bg-color: #f7f3e9;
+    --text-color: #2c2416;
+    --header-bg: rgba(247, 243, 233, 0.98);
+    --border-color: rgba(139, 69, 19, 0.1);
+    --accent-color: #8b4513;
+    --verse-number-color: #a0522d;
+    --modal-bg: rgba(247, 243, 233, 0.98);
+    --modal-text: #2c2416;
+    --button-hover: rgba(139, 69, 19, 0.1);
+}
+
+/* Base styling with performance optimizations */
 * {
     box-sizing: border-box;
     -webkit-font-smoothing: antialiased;
@@ -15,14 +31,15 @@ export default `/* Base styling with performance optimizations */
 
 body {
     font-family: "Charter", "Iowan Old Style", "Source Serif Pro", "Crimson Text", "Minion Pro", "Lyon Text", "Sabon", "Palatino", "Hoefler Text", "Baskerville", "Georgia", serif;
-    line-height: 1.8;
-    color: #2c2416;
-    background: #f7f3e9;
+    line-height: 1.6; /* Optimized for biblical reading */
+    color: var(--text-color);
+    background: var(--bg-color);
     margin: 0;
     padding: 0;
     overflow-x: hidden;
     text-rendering: optimizeSpeed;
     contain: layout style;
+    font-display: swap; /* Prevent FOIT, allow FOUT for better CLS */
 }
 
 /* Header */
@@ -32,9 +49,9 @@ body {
     left: 0;
     right: 0;
     z-index: 1000;
-    background: rgba(247, 243, 233, 0.98);
+    background: var(--header-bg);
     transform: translateY(0);
-    border-bottom: 1px solid rgba(139, 69, 19, 0.1);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .header-content {
@@ -48,7 +65,7 @@ body {
 
 .book-chapter {
     display: inline;
-    color: #8b4513;
+    color: var(--accent-color);
     cursor: pointer;
 }
 
@@ -59,7 +76,7 @@ body {
 .about-button {
     background: none;
     border: none;
-    color: #8b4513;
+    color: var(--accent-color);
     font-family: inherit;
     font-size: 0.9em;
     cursor: pointer;
@@ -68,7 +85,7 @@ body {
 }
 
 .about-button:hover {
-    color: #6d3a0f;
+    background: var(--button-hover);
 }
 
 /* Main content */
@@ -88,6 +105,8 @@ body {
     margin: 0 auto;
     min-height: calc(100vh - 70px);
     contain: layout;
+    font-family: var(--reading-font);
+    line-height: 1.65; /* Optimal for biblical reading - better than 1.8 */
 }
 
 .chapter-section.active {
@@ -109,7 +128,7 @@ body {
     transform: translateX(-50%);
     width: 80px;
     height: 1px;
-    background: linear-gradient(90deg, transparent, #8b4513, transparent);
+    background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
     opacity: 0.3;
 }
 
@@ -121,7 +140,7 @@ body {
     transform: translateX(-50%);
     width: 120px;
     height: 1px;
-    background: linear-gradient(90deg, transparent, #8b4513, transparent);
+    background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
     opacity: 0.2;
 }
 
@@ -129,11 +148,11 @@ body {
     margin: 0;
     font-size: 2.2em;
     font-weight: 300;
-    color: #8b4513;
+    color: var(--accent-color);
     opacity: 0.85;
     letter-spacing: 0.5px;
     text-shadow: 0 1px 2px rgba(139, 69, 19, 0.1);
-    font-family: "Charter", "Iowan Old Style", "Source Serif Pro", serif;
+    font-family: var(--reading-font);
     cursor: pointer;
 }
 
@@ -155,7 +174,7 @@ body {
 
 .verse-number {
     font-size: 0.75em;
-    color: #a0522d;
+    color: var(--verse-number-color);
     margin-right: 8px;
     vertical-align: super;
     font-weight: 500;
@@ -163,10 +182,120 @@ body {
 }
 
 
+/* Settings Modal Styles */
+.setting-group {
+    margin-bottom: 24px;
+}
+
+.setting-group h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.05em;
+    font-weight: 500;
+    color: var(--accent-color);
+}
+
+.font-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 4px;
+}
+
+.font-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 4px 6px 4px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    text-align: center;
+    min-height: 70px;
+}
+
+.font-option:hover {
+    background: var(--button-hover);
+}
+
+.font-option input {
+    margin: 0 0 4px 0;
+    flex-shrink: 0;
+    transform: scale(0.9);
+}
+
+.font-option .option-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: center;
+}
+
+.option-name {
+    font-size: 0.75em;
+    font-weight: 500;
+    color: var(--text-color);
+    line-height: 1.1;
+    text-align: center;
+}
+
+.font-option .option-preview {
+    font-size: 1.2em;
+    font-weight: 400;
+    opacity: 0.9;
+    margin-top: 1px;
+}
+
+/* Font Preview Styles */
+.system-serif-font {
+    font-family: "Charter", "Iowan Old Style", "Source Serif Pro", "Crimson Text", "Minion Pro", "Lyon Text", "Sabon", "Palatino", "Hoefler Text", "Baskerville", "Georgia", serif;
+}
+
+.system-sans-font {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+}
+
+.serif-font {
+    font-family: "Crimson Text", "Crimson Pro", serif;
+}
+
+.sans-font {
+    font-family: "Source Sans Pro", "Source Sans 3", sans-serif;
+}
+
+.slab-font {
+    font-family: "Zilla Slab", "Roboto Slab", slab-serif;
+}
+
+
+.about-section {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-color);
+}
+
+.about-section h3 {
+    margin: 0 0 12px 0;
+    font-size: 1.1em;
+    font-weight: 500;
+    color: var(--accent-color);
+}
+
+/* Background blur for main content when settings modal is open */
+body.settings-modal-open .bible-container {
+    filter: blur(1px);
+    transition: filter 0.2s ease;
+    opacity: 0.7;
+}
+
+body.settings-modal-open .app-header {
+    filter: blur(1px);
+    transition: filter 0.2s ease;
+    opacity: 0.7;
+}
+
 /* Modal base styles */
 .bible-picker,
-.settings-modal,
-.about-modal {
+.settings-modal {
     display: none;
     position: fixed;
     top: 0;
@@ -191,7 +320,7 @@ body {
 
 .picker-content,
 .modal-content {
-    background: #f7f3e9;
+    background: var(--bg-color);
     max-width: 400px;
     width: 85vw;
     max-height: 70vh;
@@ -228,7 +357,7 @@ body {
 .modal-body p {
     margin: 0 0 12px 0;
     line-height: 1.6;
-    color: #2c2416;
+    color: var(--text-color);
     text-align: left;
 }
 
@@ -237,7 +366,7 @@ body {
 }
 
 .modal-body a {
-    color: #8b4513;
+    color: var(--accent-color);
     text-decoration: underline;
     transition: color 0.2s ease;
 }
@@ -248,7 +377,7 @@ body {
 
 .modal-body em {
     font-style: italic;
-    color: #8b4513;
+    color: var(--accent-color);
 }
 
 .book-button,
@@ -262,13 +391,13 @@ body {
     text-align: center;
     font-family: inherit;
     font-size: 1.05em;
-    color: #2c2416;
+    color: var(--text-color);
 }
 
 .book-button:hover,
 .chapter-button:hover {
     background: rgba(139, 69, 19, 0.08);
-    color: #8b4513;
+    color: var(--accent-color);
 }
 
 
@@ -291,7 +420,7 @@ body {
 }
 
 .chapter-book-header:hover {
-    color: #a0522d;
+    color: var(--verse-number-color);
 }
 
 .chapter-grid {
@@ -312,7 +441,7 @@ body {
     text-align: center;
     font-family: inherit;
     font-size: 1.1em;
-    color: #2c2416;
+    color: var(--text-color);
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -321,7 +450,7 @@ body {
 
 .chapter-number-button:hover {
     background: rgba(139, 69, 19, 0.1);
-    color: #8b4513;
+    color: var(--accent-color);
 }
 
 
@@ -338,7 +467,7 @@ body {
 
 .book-title {
     font-size: 2.5em;
-    color: #8b4513;
+    color: var(--accent-color);
     text-align: center;
     margin: 40px 0 60px 0;
     font-weight: 300;

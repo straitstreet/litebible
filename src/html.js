@@ -3,7 +3,7 @@ export default `<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bible - Berean Standard Bible (BSB) Reader</title>
+    <title>Lite Bible</title>
     <meta name="description" content="Read the complete Berean Standard Bible online. Ultra-minimal, fast-loading Bible reader with infinite scroll and dark mode. All 66 books freely available.">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%23000'/%3E%3Ctext x='90' y='115' text-anchor='middle' fill='white' font-size='110' font-family='serif'%3E📜%3C/text%3E%3C/svg%3E">
@@ -17,6 +17,15 @@ export default `<!DOCTYPE html>
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <style>
         /* Critical CSS inlined for performance */
+        :root {
+            --bg-color: #f7f3e9;
+            --text-color: #2c2416;
+            --header-bg: rgba(247, 243, 233, 0.98);
+            --border-color: rgba(139, 69, 19, 0.1);
+            --accent-color: #8b4513;
+            --verse-number-color: #a0522d;
+        }
+
         /* Base styling with performance optimizations */
         * {
             box-sizing: border-box;
@@ -35,8 +44,8 @@ export default `<!DOCTYPE html>
         body {
             font-family: "Charter", "Iowan Old Style", "Source Serif Pro", "Crimson Text", "Minion Pro", "Lyon Text", "Sabon", "Palatino", "Hoefler Text", "Baskerville", "Georgia", serif;
             line-height: 1.8;
-            color: #2c2416;
-            background: #f7f3e9;
+            color: var(--text-color, #2c2416);
+            background: var(--bg-color, #f7f3e9);
             margin: 0;
             padding: 0;
             overflow-x: hidden;
@@ -51,9 +60,9 @@ export default `<!DOCTYPE html>
             left: 0;
             right: 0;
             z-index: 1000;
-            background: rgba(247, 243, 233, 0.98);
+            background: var(--header-bg);
             transform: translateY(0);
-            border-bottom: 1px solid rgba(139, 69, 19, 0.1);
+            border-bottom: 1px solid var(--border-color);
         }
 
         .header-content {
@@ -150,7 +159,7 @@ export default `<!DOCTYPE html>
 <body>
     <header class="app-header">
         <div class="header-content">
-            <button class="about-button" onclick="showAboutModal()">About</button>
+            <button class="about-button" onclick="showSettingsModal()">Settings</button>
         </div>
     </header>
 
@@ -173,19 +182,64 @@ export default `<!DOCTYPE html>
         </div>
     </div>
 
-    <div class="about-modal" id="aboutModal">
-        <div class="modal-backdrop" id="aboutBackdrop"></div>
+    <div class="settings-modal" id="settingsModal">
+        <div class="modal-backdrop" id="settingsBackdrop"></div>
         <div class="modal-content">
             <div class="modal-body">
-                <h2>About Lite Bible</h2>
-                <p><strong>The Holy Bible, Berean Standard Bible, BSB</strong> is produced in cooperation with Bible Hub, Discovery Bible, OpenBible.com, and the Berean Bible Translation Committee. This text of God's Word has been dedicated to the public domain.</p>
+                <h2>Settings</h2>
                 
-                <p><em>"Freely you have received; freely give."</em> — Matthew 10:8 BSB</p>
+                <div class="setting-group">
+                    <h3>Font Family</h3>
+                    <div class="font-options">
+                        <label class="font-option" data-font="system-serif">
+                            <input type="radio" name="font" value="system-serif" checked>
+                            <div class="option-content">
+                                <span class="option-name">System Serif</span>
+                                <span class="option-preview system-serif-font">Aa</span>
+                            </div>
+                        </label>
+                        <label class="font-option" data-font="system-sans">
+                            <input type="radio" name="font" value="system-sans">
+                            <div class="option-content">
+                                <span class="option-name">System Sans</span>
+                                <span class="option-preview system-sans-font">Aa</span>
+                            </div>
+                        </label>
+                        <label class="font-option" data-font="serif">
+                            <input type="radio" name="font" value="serif">
+                            <div class="option-content">
+                                <span class="option-name">Crimson Text</span>
+                                <span class="option-preview serif-font">Aa</span>
+                            </div>
+                        </label>
+                        <label class="font-option" data-font="sans">
+                            <input type="radio" name="font" value="sans">
+                            <div class="option-content">
+                                <span class="option-name">Source Sans Pro</span>
+                                <span class="option-preview sans-font">Aa</span>
+                            </div>
+                        </label>
+                        <label class="font-option" data-font="slab">
+                            <input type="radio" name="font" value="slab">
+                            <div class="option-content">
+                                <span class="option-name">Zilla Slab</span>
+                                <span class="option-preview slab-font">Aa</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
                 
-                <p>In obedience to our Lord, <a href="https://straitstreet.co" target="_blank" rel="noopener noreferrer">Strait Street</a> has also made Lite Bible free for all.</p>
-                
-                <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(139, 69, 19, 0.2); font-size: 0.85em; color: #8b4513; text-align: center;">
-                    v1.0.0
+                <div class="about-section">
+                    <h3>About Lite Bible</h3>
+                    <p><strong>The Holy Bible, Berean Standard Bible, BSB</strong> is produced in cooperation with Bible Hub, Discovery Bible, OpenBible.com, and the Berean Bible Translation Committee. This text of God's Word has been dedicated to the public domain.</p>
+                    
+                    <p><em>"Freely you have received; freely give."</em> — Matthew 10:8 BSB</p>
+                    
+                    <p>In obedience to our Lord, <a href="https://straitstreet.co" target="_blank" rel="noopener noreferrer">Strait Street</a> has also made Lite Bible free for all.</p>
+                    
+                    <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(139, 69, 19, 0.2); font-size: 0.85em; color: #8b4513; text-align: center;">
+                        v1.0.0
+                    </div>
                 </div>
             </div>
         </div>

@@ -15,7 +15,7 @@ function generateCompleteBibleHTML() {
 
       return `<div class="chapter-section" id="book-${bookIndex}-chapter-${chapterIndex}">
           <div class="chapter-header">
-            <h2 class="chapter-title">${chapterNum}</h2>
+            <h2 class="chapter-title" onclick="showBiblePicker()">${bookName} ${chapterNum}</h2>
           </div>
           <div class="chapter-content">
             ${versesHTML}
@@ -79,12 +79,8 @@ export default {
 <body>
     <header class="app-header">
         <div class="header-content">
-            <h1 class="app-title">
-                <span class="book-chapter" id="headerBookChapter" onclick="showBiblePicker()">Genesis 1</span>
-            </h1>
             <button class="about-button" onclick="showAboutModal()">About</button>
         </div>
-        <div class="scroll-blur-mask"></div>
     </header>
 
     <main class="bible-container" id="bibleContainer">
@@ -257,16 +253,17 @@ export default {
         // Load initial chapter set (current + 2 before + 2 after)
         loadChapterRange(currentBookIndex, currentChapterIndex, 2, 2);
         
-        // Scroll to current chapter/verse after brief delay
-        setTimeout(() => {
-          if (savedPosition && savedPosition.verse) {
-            scrollToVerse(currentBookIndex, currentChapterIndex, savedPosition.verse, false);
-          } else {
-            scrollToChapter(currentBookIndex, currentChapterIndex, false);
-          }
-        }, 100);
+        // Only scroll to position if we have a saved reading position
+        if (savedPosition && savedPosition.bookIndex !== undefined && savedPosition.chapterIndex !== undefined) {
+          setTimeout(() => {
+            if (savedPosition.verse) {
+              scrollToVerse(currentBookIndex, currentChapterIndex, savedPosition.verse, false);
+            } else {
+              scrollToChapter(currentBookIndex, currentChapterIndex, false);
+            }
+          }, 100);
+        }
         
-        updateHeader();
         setupInfiniteScroll();
       }
       
@@ -338,7 +335,7 @@ export default {
         chapterElement.id = 'book-' + bookIndex + '-chapter-' + chapterIndex;
         chapterElement.innerHTML = 
           '<div class="chapter-header">' +
-            '<h2 class="chapter-title">' + chapterNum + '</h2>' +
+            '<h2 class="chapter-title">' + book[0] + " " + chapterNum + '</h2>' +
           '</div>' +
           '<div class="chapter-content">' +
             versesHTML +
@@ -676,9 +673,6 @@ export default {
           currentBookIndex = foundChapter.bookIndex;
           currentChapterIndex = foundChapter.chapterIndex;
           
-          // Always update header with current verse
-          updateHeader(foundVerse);
-          
           // Save position if changed
           if (hasChanged) {
             throttledSavePosition(currentBookIndex, currentChapterIndex, foundVerse);
@@ -724,24 +718,6 @@ export default {
         }
       }
       
-      // Update header with current chapter info
-      function updateHeader(verseNumber = null) {
-        const book = bibleBooks[currentBookIndex];
-        if (book) {
-          const bookName = book[0];
-          const chapterNum = currentChapterIndex + 1;
-          const headerEl = document.getElementById('headerBookChapter');
-          
-          if (verseNumber && verseNumber > 1) {
-            // Show verse number if we're past verse 1
-            headerEl.textContent = bookName + ' ' + chapterNum + ':' + verseNumber;
-          } else {
-            // Just show book and chapter
-            headerEl.textContent = bookName + ' ' + chapterNum;
-          }
-        }
-      }
-
       // Navigate to specific chapter (simplified)
       function goToChapter(bookIndex, chapterIndex) {
         // Clear all existing chapters
@@ -761,7 +737,6 @@ export default {
           scrollToChapter(bookIndex, chapterIndex, false);
         }, 150);
         
-        updateHeader();
         hideBiblePicker();
         
         // Save new position
@@ -960,14 +935,6 @@ body {
     margin: 0 auto;
 }
 
-.app-title {
-    margin: 0;
-    font-size: 1.1em;
-    font-weight: normal;
-    color: #8b4513;
-    user-select: none;
-}
-
 .book-chapter {
     display: inline;
     color: #8b4513;
@@ -993,20 +960,6 @@ body {
 
 .about-button:hover {
     color: #6d3a0f;
-}
-
-
-.scroll-blur-mask {
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    right: 0;
-    height: 20px;
-    background: linear-gradient(to bottom, transparent 0%, rgba(247, 243, 233, 0.6) 50%, rgba(247, 243, 233, 0.95) 100%);
-    opacity: 1;
-    transition: opacity 0.3s ease;
-    backdrop-filter: blur(8px);
-    pointer-events: none;
 }
 
 /* Main content */
@@ -1298,10 +1251,6 @@ body {
         border-bottom-color: rgba(164, 137, 87, 0.15);
     }
 
-    .app-title {
-        color: #d4b896;
-    }
-
     .book-chapter {
         color: #d4b896;
     }
@@ -1312,11 +1261,6 @@ body {
 
     .about-button:hover {
         color: #e8d2a6;
-    }
-
-
-    .scroll-blur-mask {
-        background: linear-gradient(to bottom, transparent 0%, rgba(26, 24, 18, 0.6) 50%, rgba(26, 24, 18, 0.95) 100%);
     }
 
     .verse-number {
@@ -1407,10 +1351,6 @@ body {
 @media (max-width: 480px) {
     .header-content {
         padding: 10px 16px;
-    }
-
-    .app-title {
-        font-size: 1.2em;
     }
 
     .chapter-section {
